@@ -2,9 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="dashboard">
+    <!-- Кнопка показа скрытой панели -->
+    <div id="showPanelBtn" class="dashboard__showBtn">→</div>
 
+    <!-- Боковая панель -->
+    <aside id="sidePanel" class="dashboard__sidebar">
+        <div id="burgerIcon" class="sidebar__burger">☰</div>
+
+        <div class="sidebar__filters">
+            <div class="filters__title">Period</div>
+            <label for="monthSelect" class="filters__label visually-hidden">Month</label>
+            <select id="monthSelect" class="filters__select">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3" selected>April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+            </select>
+            <label for="yearSelect" class="filters__label visually-hidden">Year</label>
+            <select id="yearSelect" class="filters__select">
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+            </select>
+        </div>
+
+        <nav class="sidebar__nav">
+            <a href="#" class="nav__link nav__link--active" data-page="projects">Projects</a>
+            <a href="#" class="nav__link" data-page="employees">Employees</a>
+        </nav>
+    </aside>
+
+    <!-- Основной контент -->
+    <main id="mainContent" class="dashboard__main">
+        <!-- Страница проектов -->
+        <div id="projectsPage" class="page">
+            <div class="page__header">
+                <h1 class="page__title">Projects</h1>
+                <div class="page__actions">
+                    <button id="addProjectBtn" class="btn btn--green">+ Add Project</button>
+                    <button id="seedDataBtn" class="btn btn--green">Seed Data</button>
+                </div>
+            </div>
+            <div id="projectFilters" class="page__filters"></div>
+            <div class="tableWrapper">
+                <table id="projectsTable" class="table">
+                    <thead>
+                    <tr>
+                        <th data-sort="company" data-filter="company">Company Name <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="project" data-filter="project">Project Name <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="budget">Budget <span class="table__sort">↕</span></th>
+                        <th data-sort="capacity">Employee Capacity <span class="table__sort">↕</span></th>
+                        <th>Employees</th>
+                        <th data-sort="income">Estimated Income <span class="table__sort">↕</span></th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Страница сотрудников -->
+        <div id="employeesPage" class="page page--hidden">
+            <div class="page__header">
+                <h1 class="page__title">Employees</h1>
+                <button id="addEmployeeBtn" class="btn btn--green">+ Add Employee</button>
+            </div>
+            <div id="employeeFilters" class="page__filters"></div>
+            <div class="tableWrapper">
+                <table id="employeesTable" class="table">
+                    <thead>
+                    <tr>
+                        <th data-sort="name" data-filter="name">Name <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="surname" data-filter="surname">Surname <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="age">Age <span class="table__sort">↕</span></th>
+                        <th data-sort="position" data-filter="position">Position <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="salary">Salary <span class="table__sort">↕</span></th>
+                        <th data-sort="payment">Estimated Payment <span class="table__sort">↕</span></th>
+                        <th data-sort="project" data-filter="project">Project <span class="table__sort">↕</span><span class="table__filter">⌕</span></th>
+                        <th data-sort="projIncome">Projected Income <span class="table__sort">↕</span></th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Форма добавления сотрудника -->
+    <div id="employeeDrawer" class="drawer">
+        <div class="drawer__content">
+            <h2 class="drawer__title">Add New Employee</h2>
+            <form id="employeeForm">
+                <!-- Добавлен label для Name -->
+                <label class="form__label">Name: *</label>
+                <label for="empName"></label><input id="empName" type="text" class="form__input" required>
+                <div id="empNameError" class="form__error">Must be at least 3 characters</div>
+
+                <label class="form__label">Surname: *</label>
+                <label for="empSurname"></label><input type="text" id="empSurname" class="form__input" required>
+                <div id="empSurnameError" class="form__error">Must be at least 3 characters</div>
+
+                <label class="form__label">Date of Birth: *</label>
+                <label for="empDob"></label><input type="date" id="empDob" class="form__input" required>
+                <div class="form__error" id="empDobError">Must be 18+ years old</div>
+
+                <label class="form__label">Position: *</label>
+                <label for="empPosition"></label><select class="form__select" id="empPosition">
+                    <option value="">Select position</option>
+                    <option>Junior</option>
+                    <option>Middle</option>
+                    <option>Senior</option>
+                    <option>Lead</option>
+                    <option>Architect</option>
+                    <option>BO</option>
+                </select>
+                <div id="empPositionError" class="form__error">Please select position</div>
+
+                <label class="form__label">Salary: *</label>
+                <label for="empSalary"></label><input type="number" id="empSalary" class="form__input" step="0.01" required>
+                <div id="empSalaryError" class="form__error">Must be greater than 0</div>
+
+                <div class="drawer__buttons">
+                    <button type="submit" id="submitEmployee" class="btn btn--green" disabled>Add</button>
+                    <button type="button" id="cancelEmployee" class="btn btn--red">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма добавления проекта -->
+    <div id="projectDrawer" class="drawer">
+        <div class="drawer__content">
+            <h2 class="drawer__title">Add New Project</h2>
+            <form id="projectForm">
+                <label class="form__label">Project Name: *</label>
+                <label for="projName"></label>
+                <input type="text" id="projName" class="form__input" required>
+                <div id="projNameError" class="form__error">Must be at least 3 characters</div>
+
+                <label class="form__label">Company Name: *</label>
+                <label for="projCompany"></label><input type="text" id="projCompany" class="form__input" required>
+                <div id="projCompanyError" class="form__error">Must be at least 2 characters</div>
+
+                <label>B</label><label>Budget: *</label>
+                <label for="projBudget"></label><input class="form__input" id="projBudget" required step="0.01" type="number">
+                <div id="projBudgetError" class="form__error">Must be greater than 0</div>
+
+                <label class="form__label">Employee Capacity: *</label>
+                <label for="projCapacity"></label><input type="number" id="projCapacity" class="form__input" required>
+                <div id="projCapacityError" class="form__error">Must be at least 1</div>
+
+                <div class="drawer__buttons">
+                    <button type="submit" id="submitProject" class="btn btn--green" disabled>Add</button>
+                    <button type="button" id="cancelProject" class="btn btn--red">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Popup для Seed Data -->
+    <div id="seedOverlay" class="overlay" style="display: none;"></div>
+    <div id="seedPopup" class="popup" style="display: none;">
+        <div class="popup__header">
+            <h2>Seed Data from Month</h2>
+            <button id="closePopup" class="popup__close">×</button>
+        </div>
+        <div class="popup__body">
+            <p>Copy data to <span id="currentMonthLabel"></span>:</p>
+            <div class="tableWrapper">
+                <table id="seedTable" class="table table--small">
+                    <thead>
+                    <tr><th>Year</th><th>Month</th><th>Projects</th><th>Employees</th><th>Total Estimated Income</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="seedTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="index.js"></script>
 </body>
 </html>
