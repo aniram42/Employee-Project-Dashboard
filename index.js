@@ -950,6 +950,7 @@ function setupSorting() {
                 else if (text.includes('position')) column = 'position';
                 else if (text.includes('salary')) column = 'salary';
                 else if (text.includes('payment')) column = 'payment';
+                else if (text.includes('project')) column = 'project';
                 else if (text.includes('income')) column = 'projIncome';
                 if (column) {
                     let direction = 'asc';
@@ -1100,6 +1101,8 @@ function addFilterIcons() {
         const headers = table.querySelectorAll('thead th');
         headers.forEach(header => {
             const text = header.textContent.trim();
+            // Исключаем столбец Projected Income
+            if (text.includes('Projected Income')) return;
             if (cols.some(col => text.includes(col)) && !header.querySelector('.filter-icon')) {
                 const filterSpan = document.createElement('span');
                 filterSpan.className = 'filter-icon';
