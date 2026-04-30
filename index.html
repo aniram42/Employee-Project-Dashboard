@@ -22,7 +22,7 @@
                 <option value="0">January</option>
                 <option value="1">February</option>
                 <option value="2">March</option>
-                <option value="3" selected>April</option>
+                <option value="3">April</option>
                 <option value="4">May</option>
                 <option value="5">June</option>
                 <option value="6">July</option>
@@ -35,7 +35,7 @@
             <label for="yearSelect" class="filters__label visually-hidden">Year</label>
             <select id="yearSelect" class="filters__select">
                 <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
+                <option value="2026">2026</option>
                 <option value="2027">2027</option>
             </select>
         </div>
@@ -112,15 +112,12 @@
                 <!-- Добавлен label для Name -->
                 <label class="form__label">Name: *</label>
                 <label for="empName"></label><input id="empName" type="text" class="form__input" required>
-                <div id="empNameError" class="form__error">Must be at least 3 characters</div>
 
                 <label class="form__label">Surname: *</label>
                 <label for="empSurname"></label><input type="text" id="empSurname" class="form__input" required>
-                <div id="empSurnameError" class="form__error">Must be at least 3 characters</div>
 
                 <label class="form__label">Date of Birth: *</label>
                 <label for="empDob"></label><input type="date" id="empDob" class="form__input" required>
-                <div class="form__error" id="empDobError">Must be 18+ years old</div>
 
                 <label class="form__label">Position: *</label>
                 <label for="empPosition"></label><select class="form__select" id="empPosition">
@@ -136,7 +133,6 @@
 
                 <label class="form__label">Salary: *</label>
                 <label for="empSalary"></label><input type="number" id="empSalary" class="form__input" step="0.01" required>
-                <div id="empSalaryError" class="form__error">Must be greater than 0</div>
 
                 <div class="drawer__buttons">
                     <button type="submit" id="submitEmployee" class="btn btn--green" disabled>Add</button>
@@ -154,19 +150,19 @@
                 <label class="form__label">Project Name: *</label>
                 <label for="projName"></label>
                 <input type="text" id="projName" class="form__input" required>
-                <div id="projNameError" class="form__error">Must be at least 3 characters</div>
+
 
                 <label class="form__label">Company Name: *</label>
                 <label for="projCompany"></label><input type="text" id="projCompany" class="form__input" required>
-                <div id="projCompanyError" class="form__error">Must be at least 2 characters</div>
 
-                <label>B</label><label>Budget: *</label>
+
+                <label class="form__label">Budget: *</label>
                 <label for="projBudget"></label><input class="form__input" id="projBudget" required step="0.01" type="number">
-                <div id="projBudgetError" class="form__error">Must be greater than 0</div>
+
 
                 <label class="form__label">Employee Capacity: *</label>
                 <label for="projCapacity"></label><input type="number" id="projCapacity" class="form__input" required>
-                <div id="projCapacityError" class="form__error">Must be at least 1</div>
+
 
                 <div class="drawer__buttons">
                     <button type="submit" id="submitProject" class="btn btn--green" disabled>Add</button>

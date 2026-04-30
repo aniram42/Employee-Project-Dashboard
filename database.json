@@ -200,6 +200,103 @@
         { "id": 8, "name": "James", "surname": "Anderson", "age": 29, "position": "Junior", "salary": 3500, "projectAssignments": [{ "projectId": 3, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [17, 18, 19] },
         { "id": 9, "name": "Maria", "surname": "Garcia", "age": 36, "position": "Middle", "salary": 5100, "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [10, 11, 12] }
       ]
+    },
+    "2026-4": {
+      "period": "May 2026",
+      "projects": [
+        {
+          "id": 1,
+          "companyName": "TechCorp",
+          "projectName": "Mobile App Pro",
+          "budget": 78000,
+          "employeeCapacity": 7,
+          "estimatedIncome": 187200
+        },
+        {
+          "id": 2,
+          "companyName": "WebSolutions",
+          "projectName": "E-commerce Plus",
+          "budget": 88000,
+          "employeeCapacity": 10,
+          "estimatedIncome": 211200
+        },
+        {
+          "id": 3,
+          "companyName": "DataSoft",
+          "projectName": "Analytics Pro",
+          "budget": 68000,
+          "employeeCapacity": 5,
+          "estimatedIncome": 163200
+        }
+      ],
+      "employees": [
+        {
+          "id": 1,
+          "name": "John",
+          "surname": "Smith",
+          "age": 35,
+          "position": "Senior",
+          "salary": 5900,
+          "estimatedPayment": 5900,
+          "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [4, 5, 6]
+        },
+        {
+          "id": 2,
+          "name": "Jane",
+          "surname": "Doe",
+          "age": 33,
+          "position": "Middle",
+          "salary": 4400,
+          "estimatedPayment": 4400,
+          "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }],
+          "vacationDays": [2, 3, 4]
+        },
+        {
+          "id": 3,
+          "name": "Mike",
+          "surname": "Johnson",
+          "age": 37,
+          "position": "Lead",
+          "salary": 7900,
+          "estimatedPayment": 7900,
+          "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [12, 13, 14]
+        },
+        {
+          "id": 4,
+          "name": "Sarah",
+          "surname": "Williams",
+          "age": 30,
+          "position": "Junior",
+          "salary": 3400,
+          "estimatedPayment": 3400,
+          "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }],
+          "vacationDays": [19, 20, 21]
+        },
+        {
+          "id": 5,
+          "name": "Alex",
+          "surname": "Brown",
+          "age": 34,
+          "position": "Architect",
+          "salary": 8900,
+          "estimatedPayment": 8900,
+          "projectAssignments": [{ "projectId": 3, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [8, 9, 10]
+        },
+        {
+          "id": 6,
+          "name": "Emily",
+          "surname": "Davis",
+          "age": 32,
+          "position": "Middle",
+          "salary": 4600,
+          "estimatedPayment": 4600,
+          "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.95 }],
+          "vacationDays": [15, 16, 17]
+        }
+      ]
     }
   }
 }
