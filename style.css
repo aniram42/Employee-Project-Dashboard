@@ -389,7 +389,6 @@ body {
     z-index: 298;
 }
 
-/* Основа попапа */
 .popup,
 #seedPopup {
     position: fixed;
@@ -408,7 +407,6 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
-/* Заголовок */
 .popup__header {
     display: flex;
     justify-content: space-between;
@@ -419,7 +417,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Кнопка закрытия */
 .popup__close {
     background: none;
     border: none;
@@ -428,21 +425,19 @@ body {
     cursor: pointer;
 }
 
-/* Тело с прокруткой */
+
 .popup__body {
     overflow-y: auto;
-    max-height: 60vh;      /* ограничиваем высоту, тогда скролл появится при превышении */
+    max-height: 60vh;
     padding: 20px;
 }
 
-/* Таблица внутри попапа (чтобы была читаемой) */
 .popup table {
     width: 100%;
     min-width: 500px;
     border-collapse: collapse;
 }
 
-/* Адаптация для маленьких экранов */
 @media (max-width: 600px) {
     .popup,
     #seedPopup {
@@ -489,7 +484,7 @@ body {
 }
 
 .seed-action-btn {
-    background-color: #27ae60;  /* зелёный фон, как у кнопок Add */
+    background-color: #27ae60;
     color: white;
     border: none;
     padding: 6px 12px;

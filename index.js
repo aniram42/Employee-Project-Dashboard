@@ -1,9 +1,9 @@
-// ========== НАВИГАЦИЯ И СОСТОЯНИЕ UI ==========
+// НАВИГАЦИЯ И СОСТОЯНИЕ UI
 let isSidebarCollapsed = false;
 let currentActiveTab = 'projects';
-let currentPeriod = '2026-3';
+let currentPeriod;
 
-// ========== БОКОВАЯ ПАНЕЛЬ ==========
+// БОКОВАЯ ПАНЕЛЬ
 function setupSidebar() {
     const sidebar = document.getElementById('sidePanel');
     const burgerBtn = document.getElementById('burgerIcon');
@@ -28,7 +28,7 @@ function setupSidebar() {
     else expandSidebar();
 }
 
-// ========== ВКЛАДКИ ==========
+// ВКЛАДКИ
 function setupTabs() {
     const projectsLink = document.querySelector('.nav__link[data-page="projects"]');
     const employeesLink = document.querySelector('.nav__link[data-page="employees"]');
@@ -60,42 +60,31 @@ function setupTabs() {
     else switchToProjects();
 }
 
-// ========== СЕЛЕКТОР ПЕРИОДА ==========
+// СЕЛЕКТОР ПЕРИОДА
 function setupPeriodSelector() {
     const monthSelect = document.getElementById('monthSelect');
     const yearSelect = document.getElementById('yearSelect');
     if (monthSelect && yearSelect) {
-        currentPeriod = `${yearSelect.value}-${monthSelect.value}`;
         function updatePeriod() {
             currentPeriod = `${yearSelect.value}-${monthSelect.value}`;
             localStorage.setItem('currentPeriod', currentPeriod);
-            if (currentActiveTab === 'projects') renderProjectsTable();
-            else renderEmployeesTable();
+            if (appData && appData.monthlyData) { // данные уже есть?
+                if (currentActiveTab === 'projects') renderProjectsTable();
+                else renderEmployeesTable();
+            }
         }
         monthSelect.addEventListener('change', updatePeriod);
         yearSelect.addEventListener('change', updatePeriod);
     }
 }
 
-// ========== УСТАНОВКА ТЕКУЩЕГО ПЕРИОДА (МЕСЯЦ/ГОД) ==========
+// УСТАНОВКА ТЕКУЩЕГО ПЕРИОДА (МЕСЯЦ/ГОД)
 function setDefaultPeriod() {
     const yearSelect = document.getElementById('yearSelect');
     const monthSelect = document.getElementById('monthSelect');
     if (!yearSelect || !monthSelect) return;
 
-    const savedPeriod = localStorage.getItem('currentPeriod');
-    if (savedPeriod) {
-        const [year, month] = savedPeriod.split('-');
-        if (yearSelect.querySelector(`option[value="${year}"]`) && month >= 0 && month <= 11) {
-            yearSelect.value = year;
-            monthSelect.value = month;
-            currentPeriod = savedPeriod;
-            yearSelect.dispatchEvent(new Event('change'));
-            monthSelect.dispatchEvent(new Event('change'));
-            return;
-        }
-    }
-
+    // Всегда берём текущую дату
     const now = new Date();
     let currentYear = now.getFullYear();
     let currentMonth = now.getMonth();
@@ -106,29 +95,15 @@ function setDefaultPeriod() {
 
     yearSelect.value = currentYear.toString();
     monthSelect.value = currentMonth.toString();
-
     currentPeriod = `${currentYear}-${currentMonth}`;
-    localStorage.setItem('currentPeriod', currentPeriod);
-
-    yearSelect.dispatchEvent(new Event('change'));
-    monthSelect.dispatchEvent(new Event('change'));
 }
 
 
-// ========== ДАННЫЕ ==========
+// ДАННЫЕ
 let appData = null;
 
 function saveToLocalStorage() {
     localStorage.setItem('monthlyData', JSON.stringify(appData.monthlyData));
-}
-
-function loadFromLocalStorage() {
-    const saved = localStorage.getItem('monthlyData');
-    if (saved) {
-        appData = { monthlyData: JSON.parse(saved) };
-        return true;
-    }
-    return false;
 }
 
 async function loadData() {
@@ -136,14 +111,17 @@ async function loadData() {
         const response = await fetch('database.json');
         appData = await response.json();
         saveToLocalStorage();
-        setTimeout(() => renderCurrentTable(), 50);
-    } catch (error) { console.error('Error loading data:', error); }
+        // Убедимся, что currentPeriod соответствует селектам
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        if (yearSelect && monthSelect) {
+            currentPeriod = `${yearSelect.value}-${monthSelect.value}`;
+        }
+        renderCurrentTable();
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
 }
-
-
-
-
-
 
 function getCurrentProjects() { return appData?.monthlyData?.[currentPeriod]?.projects || []; }
 function getCurrentEmployees() { return appData?.monthlyData?.[currentPeriod]?.employees || []; }
@@ -161,7 +139,7 @@ function escapeHtml(str) {
     });
 }
 
-// ========== ФИНАНСОВЫЕ РАСЧЁТЫ ==========
+// ФИНАНСОВЫЕ РАСЧЕТЫ
 function getWorkingDays(year, month) {
     const date = new Date(year, month, 1);
     let workingDays = 0;
@@ -214,7 +192,7 @@ function calculateBenchCost(employee) {
     return employee.salary * 0.5;
 }
 
-// ========== ОСНОВНЫЕ CRUD ОПЕРАЦИИ ==========
+// ОСНОВНЫЕ CRUD ОПЕРАЦИИ
 function deleteEmployee(employeeId) {
     const employees = getCurrentEmployees();
     const index = employees.findIndex(e => e.id === employeeId);
@@ -255,7 +233,7 @@ function deleteProject(projectId) {
     }
 }
 
-// ========== INLINE EDITING (Position, Salary) ==========
+// INLINE EDITING (Position, Salary)
 function makeEditable() {
     // Устанавливаем обработчики на существующие ячейки (только один раз)
     document.querySelectorAll('#employeesTable tbody tr').forEach(row => {
@@ -335,7 +313,7 @@ function makeEditable() {
     });
 }
 
-// ========== УПРАВЛЕНИЕ НАЗНАЧЕНИЯМИ ==========
+// УПРАВЛЕНИЕ НАЗНАЧЕНИЯМИ
 function saveAssignment(employeeId, projectId, capacity, fit) {
     const employees = getCurrentEmployees();
     const employee = employees.find(e => e.id === employeeId);
@@ -352,52 +330,7 @@ function saveAssignment(employeeId, projectId, capacity, fit) {
     renderProjectsTable();
 }
 
-function showUnassignConfirmation(employeeId, projectId, assignment) {
-    const employee = getCurrentEmployees().find(e => e.id === employeeId);
-    const project = getCurrentProjects().find(p => p.id === projectId);
-    if (!employee || !project) return;
-    const [year, month] = currentPeriod.split('-').map(Number);
-    const vacationCoeff = calculateVacationCoefficient(employee.vacationDays, year, month);
-    const revenue = calculateEmployeeRevenue(employee, project, assignment, vacationCoeff, getCurrentEmployees());
-    const cost = employee.salary * Math.max(0.5, assignment.capacity);
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1100;display:flex;align-items:center;justify-content:center;';
-    const popup = document.createElement('div');
-    popup.style.cssText = 'background:white;border-radius:16px;padding:24px;width:450px;max-width:90vw;';
-    popup.innerHTML = `
-        <h3>Confirm Unassignment</h3>
-        <p><strong>Employee:</strong> ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</p>
-        <p><strong>Project:</strong> ${escapeHtml(project.projectName)}</p>
-        <p><strong>Capacity:</strong> ${assignment.capacity.toFixed(2)}</p>
-        <p><strong>Fit:</strong> ${assignment.fit.toFixed(2)}</p>
-        <hr>
-        <p><strong>Financial Impact:</strong></p>
-        <p>Revenue: <span style="color:#27ae60;">+$${revenue.toFixed(2)}</span></p>
-        <p>Cost: <span style="color:#e74c3c;">-$${cost.toFixed(2)}</span></p>
-        <p><strong>Net Change: <span style="color:${(revenue - cost) >= 0 ? '#27ae60' : '#e74c3c'};">${(revenue - cost) >= 0 ? '+' : ''}${(revenue - cost).toFixed(2)}</span></strong></p>
-        <div style="display:flex;gap:12px;margin-top:20px;">
-            <button id="confirmUnassign" style="flex:1;padding:10px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Confirm</button>
-            <button id="cancelUnassign" style="flex:1;padding:10px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
-        </div>
-    `;
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-    popup.querySelector('#confirmUnassign').onclick = () => {
-        const employees = getCurrentEmployees();
-        const emp = employees.find(e => e.id === employeeId);
-        if (emp && emp.projectAssignments) {
-            emp.projectAssignments = emp.projectAssignments.filter(a => a.projectId !== projectId);
-            saveToLocalStorage();
-            renderEmployeesTable();
-            renderProjectsTable();
-        }
-        overlay.remove();
-    };
-    popup.querySelector('#cancelUnassign').onclick = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-}
-
-// ========== ПОЗИЦИОНИРОВАНИЕ ПОПАПА НАЗНАЧЕНИЯ ==========
+// ПОЗИЦИОНИРОВАНИЕ ПОПАПА НАЗНАЧЕНИЯ
 function positionPopup(popup, triggerElement) {
     if (!popup || !triggerElement) return;
     const rect = triggerElement.getBoundingClientRect();
@@ -431,34 +364,31 @@ function openAssignmentPopupWithPosition(employeeId, projectId, onSave, triggerB
     const currentCapacity = existingAssignment?.capacity || 0.5;
     const currentFit = existingAssignment?.fit || 0.8;
     const totalAssigned = employee.projectAssignments?.reduce((sum, a) => sum + (a.capacity || 0), 0) || 0;
-    const availableCapacity = 1.5 - totalAssigned + (existingAssignment ? currentCapacity : 0);
     const popup = document.createElement('div');
-    popup.style.cssText = 'background:white;border-radius:16px;padding:20px;width:380px;max-width:90vw;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:1200;border:1px solid #ddd;';
+    popup.style.cssText = 'background:white;border-radius:16px;padding:20px;width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:1200;border:1px solid #ddd;';
     popup.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;font-size:18px;">${existingAssignment ? 'Edit' : 'Assign'} Employee to Project</h3>
-            <button class="close-assign-popup" style="background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
-        </div>
-        <p><strong>Employee:</strong> ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</p>
-        <p><strong>Project:</strong> ${escapeHtml(project.projectName)}</p>
-        <p><strong>Current total capacity:</strong> ${totalAssigned.toFixed(2)}/1.5</p>
-        <p><strong>Available capacity:</strong> <span id="availableCapacity">${availableCapacity.toFixed(2)}</span></p>
-        <div style="margin:15px 0;">
-            <label style="display:block;margin-bottom:8px;">Capacity (0.0-1.5):</label>
-            <input type="range" id="assignCapacity" min="0" max="1.5" step="0.1" value="${currentCapacity}" style="width:100%;">
-            <span id="capacityValue">${currentCapacity.toFixed(1)}</span>
-        </div>
-        <div style="margin:15px 0;">
-            <label style="display:block;margin-bottom:8px;">Fit Coefficient (0.0-1.0):</label>
-            <input type="range" id="assignFit" min="0" max="1" step="0.1" value="${currentFit}" style="width:100%;">
-            <span id="fitValue">${currentFit.toFixed(1)}</span>
-        </div>
-        <div id="assignWarning" style="color:#e74c3c;margin:10px 0;display:none;">⚠️ Capacity exceeds available limit!</div>
-        <div style="display:flex;gap:12px;margin-top:20px;">
-            <button id="assignSaveBtn" style="flex:1;padding:10px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Save</button>
-            <button id="assignCancelBtn" style="flex:1;padding:10px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
-        </div>
-    `;
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:15px;">${existingAssignment ? 'Edit' : 'Assign'} Employee</h3>
+        <button class="close-assign-popup" style="background:none;border:none;font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <p style="margin:0 0 6px 0;font-size:12px;"><strong>${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</strong> → ${escapeHtml(project.projectName)}</p>
+    <p style="margin:0 0 6px 0;font-size:11px;">Used: ${totalAssigned.toFixed(2)}/1.5</p>
+    <div style="margin:8px 0;">
+        <label style="display:block;margin-bottom:2px;font-size:11px;">Capacity (0-1.5):</label>
+        <input type="range" id="assignCapacity" min="0" max="1.5" step="0.1" value="${currentCapacity}" style="width:100%;">
+        <span id="capacityValue" style="font-size:11px;">${currentCapacity.toFixed(1)}</span>
+    </div>
+    <div style="margin:8px 0;">
+        <label style="display:block;margin-bottom:2px;font-size:11px;">Fit (0-1):</label>
+        <input type="range" id="assignFit" min="0" max="1" step="0.1" value="${currentFit}" style="width:100%;">
+        <span id="fitValue" style="font-size:11px;">${currentFit.toFixed(1)}</span>
+    </div>
+    <div id="assignWarning" style="color:#e74c3c;margin:6px 0;font-size:11px;display:none;">Limit exceeded</div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+        <button id="assignSaveBtn" style="flex:1;padding:5px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">Save</button>
+        <button id="assignCancelBtn" style="flex:1;padding:5px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">Cancel</button>
+    </div>
+`;
     document.body.appendChild(popup);
     currentAssignmentOverlay = popup;
     if (triggerButton) positionPopup(popup, triggerButton);
@@ -495,54 +425,7 @@ function openAssignmentPopupWithPosition(employeeId, projectId, onSave, triggerB
     popup.querySelector('.close-assign-popup').onclick = cleanup;
 }
 
-function addAssignButtonsWithPositioning() {
-    document.querySelectorAll('#employeesTable tbody tr').forEach(row => {
-        const deleteBtn = row.querySelector('.delete-employee-btn');
-        const employeeId = deleteBtn ? parseInt(deleteBtn.dataset.id) : null;
-        const actionsCell = row.cells[8];
-        if (actionsCell && employeeId && !actionsCell.querySelector('.assign-btn')) {
-            const totalAssigned = (getCurrentEmployees().find(e => e.id === employeeId)?.projectAssignments?.reduce((s,a)=>s+(a.capacity||0),0)||0);
-            const isMax = totalAssigned >= 1.5;
-            const assignBtn = document.createElement('button');
-            assignBtn.textContent = 'Assign';
-            assignBtn.className = 'assign-btn';
-            assignBtn.style.cssText = `background:${isMax ? '#95a5a6' : '#27ae60'};border:none;color:white;padding:5px 10px;border-radius:5px;cursor:${isMax ? 'not-allowed' : 'pointer'};margin-right:5px;`;
-            assignBtn.onclick = (e) => {
-                if (isMax) { alert(`Employee at max capacity (${totalAssigned.toFixed(2)}/1.5)`); return; }
-                const projects = getCurrentProjects();
-                if (!projects.length) { alert('No projects available'); return; }
-                const selectOverlay = document.createElement('div');
-                selectOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1150;display:flex;align-items:center;justify-content:center;';
-                const selectPopup = document.createElement('div');
-                selectPopup.style.cssText = 'background:white;border-radius:16px;padding:20px;width:300px;';
-                selectPopup.innerHTML = `<h3>Select Project</h3>
-                    <select id="projectSelect" style="width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc;">
-                        <option value="">-- Select project --</option>
-                        ${projects.map(p => `<option value="${p.id}">${escapeHtml(p.projectName)}</option>`).join('')}
-                    </select>
-                    <div style="display:flex;gap:10px;">
-                        <button id="confirmSelect" style="flex:1;padding:8px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Assign</button>
-                        <button id="cancelSelect" style="flex:1;padding:8px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
-                    </div>`;
-                selectOverlay.appendChild(selectPopup);
-                document.body.appendChild(selectOverlay);
-                const projectSelect = selectPopup.querySelector('#projectSelect');
-                selectPopup.querySelector('#confirmSelect').onclick = () => {
-                    const projectId = parseInt(projectSelect.value);
-                    if (projectId) {
-                        openAssignmentPopupWithPosition(employeeId, projectId, saveAssignment, e.target);
-                        selectOverlay.remove();
-                    } else alert('Please select a project');
-                };
-                selectPopup.querySelector('#cancelSelect').onclick = () => selectOverlay.remove();
-                selectOverlay.onclick = (e) => { if (e.target === selectOverlay) selectOverlay.remove(); };
-            };
-            actionsCell.insertBefore(assignBtn, actionsCell.firstChild);
-        }
-    });
-}
-
-// ========== КАЛЕНДАРЬ ОТПУСКОВ ==========
+// КАЛЕНДАРЬ ОТПУСКОВ
 let selectedVacationDays = [];
 function getWorkingDaysInMonth(year, month) {
     const date = new Date(year, month, 1);
@@ -668,98 +551,276 @@ function addAvailabilityButtons() {
     });
 }
 
-// ========== ПОПАПЫ ДЕТАЛЕЙ (Show Employees, Show Assignments) ==========
+// ПОПАПЫ ДЕТАЛЕЙ (Show Employees, Show Assignments)
 function showProjectEmployees(projectId) {
     const project = getCurrentProjects().find(p => p.id === projectId);
     if (!project) return;
     const employees = getCurrentEmployees();
     const projEmps = employees.filter(emp => emp.projectAssignments?.some(a => a.projectId === projectId));
     const [year, month] = currentPeriod.split('-').map(Number);
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // Удаляем предыдущий попап, если он был (на случай быстрых кликов)
+    const existingOverlay = document.querySelector('#projectEmployeesOverlay');
+    if (existingOverlay) existingOverlay.remove();
+
     const overlay = document.createElement('div');
+    overlay.id = 'projectEmployeesOverlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1100;display:flex;align-items:center;justify-content:center;';
     const popup = document.createElement('div');
-    popup.style.cssText = 'background:white;border-radius:16px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    popup.style.cssText = 'background:white;border-radius:16px;width:90%;max-width:1300px;max-height:85vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+
     if (projEmps.length === 0) {
         popup.innerHTML = `<div style="display:flex;justify-content:space-between;padding:16px 20px;background:#4a6a8a;color:white;"><h3>Employees in "${escapeHtml(project.projectName)}"</h3><button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button></div>
                           <div style="padding:40px;text-align:center;"><p>No employees assigned to this project.</p></div>`;
     } else {
-        let rows = '', totEff=0, totRev=0, totCost=0, totProfit=0;
+        let rows = '';
         projEmps.forEach(emp => {
             const assign = emp.projectAssignments.find(a => a.projectId === projectId);
             if (assign) {
                 const vacCoeff = calculateVacationCoefficient(emp.vacationDays, year, month);
                 const effCap = assign.capacity * assign.fit * vacCoeff;
-                const rev = calculateEmployeeRevenue(emp, project, assign, vacCoeff, employees);
+                const revenue = calculateEmployeeRevenue(emp, project, assign, vacCoeff, employees);
                 const cost = calculateEmployeeCost(emp, assign);
-                const profit = rev - cost;
-                totEff += effCap; totRev += rev; totCost += cost; totProfit += profit;
-                rows += `<tr><td style="padding:10px;">${escapeHtml(emp.name)} ${escapeHtml(emp.surname)}</td>
-                         <td style="padding:10px;">${escapeHtml(emp.position)}</td>
-                         <td style="padding:10px;text-align:center;">${assign.capacity.toFixed(2)}</td>
-                         <td style="padding:10px;text-align:center;">${assign.fit.toFixed(2)}</td>
-                         <td style="padding:10px;text-align:center;">${emp.vacationDays?.length || 0}</td>
-                         <td style="padding:10px;text-align:center;font-weight:bold;">${effCap.toFixed(3)}</td>
-                         <td style="padding:10px;text-align:center;color:#27ae60;">$${rev.toFixed(2)}</td>
-                         <td style="padding:10px;text-align:center;color:#e74c3c;">$${cost.toFixed(2)}</td>
-                         <td style="padding:10px;text-align:center;color:${profit>=0?'#27ae60':'#e74c3c'};">$${profit.toFixed(2)}</td></tr>`;
+                const profit = revenue - cost;
+                const vacationDaysCount = emp.vacationDays?.length || 0;
+                rows += `<tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">${escapeHtml(emp.name)} ${escapeHtml(emp.surname)}</td>
+                    <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${assign.capacity.toFixed(2)}</td>
+                    <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${assign.fit.toFixed(2)}</td>
+                    <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${vacationDaysCount}</td>
+                    <td style="padding:10px; text-align:center; font-weight:bold; border-bottom:1px solid #eee;">${effCap.toFixed(3)}</td>
+                    <td style="padding:10px; text-align:center; color:#27ae60; border-bottom:1px solid #eee;">$${revenue.toFixed(2)}</td>
+                    <td style="padding:10px; text-align:center; color:#e74c3c; border-bottom:1px solid #eee;">$${cost.toFixed(2)}</td>
+                    <td style="padding:10px; text-align:center; color:${profit>=0?'#27ae60':'#e74c3c'}; border-bottom:1px solid #eee;">$${profit.toFixed(2)}</td>
+                    <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">
+                        <button class="edit-assignment-btn" data-employee-id="${emp.id}" style="background:#4a6a8a;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:5px;">Edit</button>
+                        <button class="unassign-employee-btn" data-employee-id="${emp.id}" data-project-id="${projectId}" style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Unassign</button>
+                    </td>
+                </tr>`;
             }
         });
-        popup.innerHTML = `<div style="display:flex;justify-content:space-between;padding:16px 20px;background:#4a6a8a;color:white;"><h3>Employees in "${escapeHtml(project.projectName)}"</h3><button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button></div>
-            <div style="padding:20px;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f0f2f5;"><th>Employee</th><th>Position</th><th>Capacity</th><th>Fit</th><th>Vacation</th><th>Eff.Capacity</th><th>Revenue</th><th>Cost</th><th>Profit</th></tr></thead>
-            <tbody>${rows}</tbody><tfoot><tr style="background:#f0f2f5;font-weight:bold;"><td colspan="5">Total:</td>
-            <td style="text-align:center;">${totEff.toFixed(3)}</td><td style="text-align:center;">$${totRev.toFixed(2)}</td><td style="text-align:center;">$${totCost.toFixed(2)}</td>
-            <td style="text-align:center;color:${totProfit>=0?'#27ae60':'#e74c3c'};">$${totProfit.toFixed(2)}</td></tr></tfoot></table></div>`;
+
+        // Подсчет итогов
+        let totEff = 0, totRev = 0, totCost = 0, totProfit = 0;
+        projEmps.forEach(emp => {
+            const assign = emp.projectAssignments.find(a => a.projectId === projectId);
+            if (assign) {
+                const vacCoeff = calculateVacationCoefficient(emp.vacationDays, year, month);
+                totEff += assign.capacity * assign.fit * vacCoeff;
+                const rev = calculateEmployeeRevenue(emp, project, assign, vacCoeff, employees);
+                const cost = calculateEmployeeCost(emp, assign);
+                totRev += rev;
+                totCost += cost;
+                totProfit += (rev - cost);
+            }
+        });
+
+        popup.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#4a6a8a;color:white;position:sticky;top:0;">
+                <h3 style="margin:0;">Employees in "${escapeHtml(project.projectName)}" (${monthNames[month]} ${year})</h3>
+                <button class="close-popup-btn" style="background:none;border:none;color:white;font-size:28px;cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:20px; overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f0f2f5;">
+                            <th>Employee</th><th>Capacity</th><th>Fit</th><th>Vacation</th><th>Effective</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr style="background:#f0f2f5; font-weight:bold;">
+                            <td colspan="4">Total:</td>
+                            <td style="text-align:center;">${totEff.toFixed(3)}</td>
+                            <td style="text-align:center;">$${totRev.toFixed(2)}</td>
+                            <td style="text-align:center;">$${totCost.toFixed(2)}</td>
+                            <td style="text-align:center; color:${totProfit>=0?'#27ae60':'#e74c3c'};">$${totProfit.toFixed(2)}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
     }
+
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
-    popup.querySelector('.close-popup-btn').onclick = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    // Функция закрытия и обновления (переоткрытия)
+    const refreshPopup = () => {
+        overlay.remove();
+        showProjectEmployees(projectId);
+    };
+
+    const closePopup = () => overlay.remove();
+    popup.querySelector('.close-popup-btn').onclick = closePopup;
+    overlay.onclick = (e) => { if (e.target === overlay) closePopup(); };
+
+    // Обработчики для Unassign
+    popup.querySelectorAll('.unassign-employee-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const empId = parseInt(btn.dataset.employeeId);
+            const projId = parseInt(btn.dataset.projectId);
+            if (confirm(`Remove employee from this project?`)) {
+                const employeesList = getCurrentEmployees();
+                const emp = employeesList.find(e => e.id === empId);
+                if (emp && emp.projectAssignments) {
+                    emp.projectAssignments = emp.projectAssignments.filter(a => a.projectId !== projId);
+                    saveToLocalStorage();
+                    renderProjectsTable();
+                    renderEmployeesTable();
+                    refreshPopup(); // обновляем попап после удаления
+                }
+            }
+        });
+    });
+
+    // Обработчики для Edit – открываем окно редактирования назначения
+    popup.querySelectorAll('.edit-assignment-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const empId = parseInt(btn.dataset.employeeId);
+            // Находим текущее назначение
+            const emp = getCurrentEmployees().find(e => e.id === empId);
+            if (!emp) return;
+            const currentAssignment = emp.projectAssignments?.find(a => a.projectId === projectId);
+            if (!currentAssignment) return;
+
+            // Создаём временную функцию save, которая после сохранения обновит попап
+            const saveAndRefresh = (employeeId, projectId, newCapacity, newFit) => {
+                saveAssignment(employeeId, projectId, newCapacity, newFit);
+                // После сохранения обновляем попап (переоткрываем)
+                refreshPopup();
+            };
+            // Открываем модалку позиционирования (используем существующую функцию)
+            openAssignmentPopupWithPosition(empId, projectId, saveAndRefresh, e.target);
+        });
+    });
 }
+
 function showEmployeeAssignments(employeeId) {
     const employee = getCurrentEmployees().find(e => e.id === employeeId);
     if (!employee) return;
     const projects = getCurrentProjects();
     const assignments = employee.projectAssignments || [];
     const [year, month] = currentPeriod.split('-').map(Number);
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1100;display:flex;align-items:center;justify-content:center;';
     const popup = document.createElement('div');
-    popup.style.cssText = 'background:white;border-radius:16px;width:750px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    popup.style.cssText = 'background:white;border-radius:16px;width:90%;max-width:1100px;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+
     if (assignments.length === 0) {
-        popup.innerHTML = `<div style="display:flex;justify-content:space-between;padding:16px 20px;background:#4a6a8a;color:white;"><h3>Assignments for ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</h3><button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button></div>
-                          <div style="padding:40px;text-align:center;"><p>No assignments for this employee.</p></div>`;
+        popup.innerHTML = `<div style="display:flex;justify-content:space-between;padding:12px 16px;background:#4a6a8a;color:white;"><h3 style="margin:0;">Projects for ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</h3><button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button></div>
+                          <div style="padding:40px;text-align:center;">No assignments for this employee.</div>`;
     } else {
-        let rows = '', totEff=0, totRev=0, totCost=0, totProfit=0;
+        let rows = '';
         assignments.forEach(assign => {
-            const project = projects.find(p => p.id === assign.projectId);
-            if (project) {
+            const proj = projects.find(p => p.id === assign.projectId);
+            if (proj) {
                 const vacCoeff = calculateVacationCoefficient(employee.vacationDays, year, month);
                 const effCap = assign.capacity * assign.fit * vacCoeff;
-                const rev = calculateEmployeeRevenue(employee, project, assign, vacCoeff, getCurrentEmployees());
-                const cost = calculateEmployeeCost(employee, assign);
-                const profit = rev - cost;
-                totEff += effCap; totRev += rev; totCost += cost; totProfit += profit;
-                rows += `<tr><td style="padding:10px;">${escapeHtml(project.projectName)}</td>
-                         <td style="text-align:center;">${assign.capacity.toFixed(2)}</td>
-                         <td style="text-align:center;">${assign.fit.toFixed(2)}</td>
-                         <td style="text-align:center;">${employee.vacationDays?.length || 0}</td>
-                         <td style="text-align:center;font-weight:bold;">${effCap.toFixed(3)}</td>
-                         <td style="text-align:center;color:#27ae60;">$${rev.toFixed(2)}</td>
-                         <td style="text-align:center;color:#e74c3c;">$${cost.toFixed(2)}</td>
-                         <td style="text-align:center;color:${profit>=0?'#27ae60':'#e74c3c'};">$${profit.toFixed(2)}</td></tr>`;
+                const revenue = calculateEmployeeRevenue(employee, proj, assign, vacCoeff, getCurrentEmployees());
+                const cost = employee.salary * Math.max(0.5, assign.capacity);
+                const profit = revenue - cost;
+                rows += `<tr>
+                    <td style="padding:8px;">${escapeHtml(proj.projectName)}</td>
+                    <td style="text-align:center;">${assign.capacity.toFixed(2)}</td>
+                    <td style="text-align:center;">${assign.fit.toFixed(2)}</td>
+                    <td style="text-align:center;">${employee.vacationDays?.length || 0}</td>
+                    <td style="text-align:center;">${effCap.toFixed(3)}</td>
+                    <td style="text-align:center;color:#27ae60;">$${Math.round(revenue)}</td>
+                    <td style="text-align:center;color:#e74c3c;">$${Math.round(cost)}</td>
+                    <td style="text-align:center;color:${profit>=0?'#27ae60':'#e74c3c'};">$${Math.round(profit)}</td>
+                </tr>`;
             }
         });
-        popup.innerHTML = `<div style="display:flex;justify-content:space-between;padding:16px 20px;background:#4a6a8a;color:white;"><h3>Assignments for ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</h3><button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button></div>
-            <div style="padding:20px;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f0f2f5;"><th>Project</th><th>Capacity</th><th>Fit</th><th>Vacation</th><th>Eff.Capacity</th><th>Revenue</th><th>Cost</th><th>Profit</th></tr></thead>
-            <tbody>${rows}</tbody><tfoot><tr style="background:#f0f2f5;font-weight:bold;"><td colspan="4">Total:</td>
-            <td style="text-align:center;">${totEff.toFixed(3)}</td><td style="text-align:center;">$${totRev.toFixed(2)}</td><td style="text-align:center;">$${totCost.toFixed(2)}</td>
-            <td style="text-align:center;color:${totProfit>=0?'#27ae60':'#e74c3c'};">$${totProfit.toFixed(2)}</td></tr></tfoot></table></div>`;
+        popup.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#4a6a8a;color:white;">
+                <h3 style="margin:0;">${escapeHtml(employee.name)} ${escapeHtml(employee.surname)} – Projects (${monthNames[month]} ${year})</h3>
+                <button class="close-popup-btn" style="background:none;border:none;color:white;font-size:24px;">&times;</button>
+            </div>
+            <div style="padding:16px; overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead><tr style="background:#f0f2f5;"><th>Project</th><th>Capacity</th><th>Fit</th><th>Vacation</th><th>Effective</th><th>Revenue</th><th>Cost</th><th>Profit</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
     }
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
-    popup.querySelector('.close-popup-btn').onclick = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const close = () => overlay.remove();
+    popup.querySelector('.close-popup-btn').onclick = close;
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
 }
+
+function addAssignButtonsWithPositioning() {
+    document.querySelectorAll('#employeesTable tbody tr').forEach(row => {
+        const deleteBtn = row.querySelector('.delete-employee-btn');
+        const employeeId = deleteBtn ? parseInt(deleteBtn.dataset.id) : null;
+        const actionsCell = row.cells[8];
+        if (actionsCell && employeeId && !actionsCell.querySelector('.assign-btn')) {
+            const totalAssigned = (getCurrentEmployees().find(e => e.id === employeeId)?.projectAssignments?.reduce((s,a)=>s+(a.capacity||0),0)||0);
+            const available = 1.5 - totalAssigned;
+            const isMax = totalAssigned >= 1.5;
+            const assignBtn = document.createElement('button');
+            assignBtn.textContent = 'Assign';
+            assignBtn.className = 'assign-btn';
+            assignBtn.style.cssText = `background:${isMax ? '#95a5a6' : '#27ae60'};border:none;color:white;padding:5px 10px;border-radius:5px;cursor:${isMax ? 'not-allowed' : 'pointer'};margin-right:5px;`;
+            assignBtn.onclick = () => {
+                if (isMax) { alert(`Employee at max capacity (${totalAssigned.toFixed(2)}/1.5)`); return; }
+                const projects = getCurrentProjects();
+                if (!projects.length) { alert('No projects available'); return; }
+
+                // Создаём модальное окно с дропдауном и информацией о загрузке
+                const selectOverlay = document.createElement('div');
+                selectOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1150;display:flex;align-items:center;justify-content:center;';
+                const selectPopup = document.createElement('div');
+                selectPopup.style.cssText = 'background:white;border-radius:16px;padding:20px;width:320px;';
+                selectPopup.innerHTML = `
+                    <h3 style="margin:0 0 12px 0;font-size:18px;">Assign Employee</h3>
+                    <div style="background:#f0f2f8;padding:10px;border-radius:8px;margin-bottom:15px;">
+                        <p style="margin:0 0 5px 0;"><strong>Employee:</strong> ${escapeHtml(getCurrentEmployees().find(e=>e.id===employeeId)?.name)} ${escapeHtml(getCurrentEmployees().find(e=>e.id===employeeId)?.surname)}</p>
+                        <p style="margin:0 0 5px 0;"><strong>Current Capacity:</strong> ${totalAssigned.toFixed(2)} / 1.5</p>
+                        <p style="margin:0;"><strong>Available:</strong> ${available.toFixed(2)}</p>
+                    </div>
+                    <label style="display:block;margin-bottom:8px;">Select Project:</label>
+                    <select id="projectSelect" style="width:100%;padding:10px;margin-bottom:20px;border-radius:8px;border:1px solid #ccc;">
+                        <option value="">-- Select project --</option>
+                        ${projects.map(p => `<option value="${p.id}">${escapeHtml(p.projectName)}</option>`).join('')}
+                    </select>
+                    <div style="display:flex;gap:10px;">
+                        <button id="confirmSelect" style="flex:1;padding:8px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Assign</button>
+                        <button id="cancelSelect" style="flex:1;padding:8px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+                    </div>
+                `;
+                selectOverlay.appendChild(selectPopup);
+                document.body.appendChild(selectOverlay);
+
+                const projectSelect = selectPopup.querySelector('#projectSelect');
+                selectPopup.querySelector('#confirmSelect').onclick = () => {
+                    const projectId = parseInt(projectSelect.value);
+                    if (projectId) {
+                        // Назначаем с дефолтными значениями capacity=0.5, fit=0.8
+                        // Можно также добавить поля для ввода, но по вашему запросу - без ползунков
+                        saveAssignment(employeeId, projectId, 0.5, 0.8);
+                        selectOverlay.remove();
+                    } else {
+                        alert('Please select a project');
+                    }
+                };
+                selectPopup.querySelector('#cancelSelect').onclick = () => selectOverlay.remove();
+                selectOverlay.onclick = (e) => { if (e.target === selectOverlay) selectOverlay.remove(); };
+            };
+            actionsCell.insertBefore(assignBtn, actionsCell.firstChild);
+        }
+    });
+}
+
 function attachProjectButtonsWithPopup() {
     document.querySelectorAll('.delete-project-btn').forEach(btn => {
         btn.onclick = (e) => { e.stopPropagation(); if (confirm('Delete project?')) deleteProject(parseInt(btn.dataset.id)); };
@@ -774,7 +835,7 @@ function attachShowAssignmentsButtons() {
     });
 }
 
-// ========== СОРТИРОВКА ==========
+// СОРТИРОВКА
 let currentSort = { projects: { column: null, direction: 'asc' }, employees: { column: null, direction: 'asc' } };
 function addSortIcons() {
     const tables = [
@@ -908,7 +969,7 @@ function setupSorting() {
     }
 }
 
-// ========== ФИЛЬТРАЦИЯ ==========
+// ФИЛЬТРАЦИЯ
 let activeFilters = { projects: {}, employees: {} };
 function createFilterPopup(column, type, values, currentFilter) {
     const popup = document.createElement('div');
@@ -1059,7 +1120,7 @@ function setupFilters() {
     });
 }
 
-// ========== SEED DATA ==========
+// SEED DATA
 function getPeriodName(period) {
     const [y,m] = period.split('-');
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1110,121 +1171,202 @@ function setupSeedDataButton() {
     if (overlay) overlay.onclick = () => { popup.style.display = 'none'; overlay.style.display = 'none'; };
 }
 
-// ========== ФОРМЫ ==========
+// ФОРМЫ
 function setupAddEmployeeForm() {
     const add = document.getElementById('addEmployeeBtn');
     const drawer = document.getElementById('employeeDrawer');
     const cancel = document.getElementById('cancelEmployee');
     const form = document.getElementById('employeeForm');
     const submit = document.getElementById('submitEmployee');
+
+    // Элементы для отображения ошибок (если есть в HTML)
+    const nameError = document.getElementById('empNameError');
+    const surnameError = document.getElementById('empSurnameError');
+    const dobError = document.getElementById('empDobError');
+    const positionError = document.getElementById('empPositionError');
+    const salaryError = document.getElementById('empSalaryError');
+
     function validate() {
-        const name = document.getElementById('empName')?.value || '';
-        const surname = document.getElementById('empSurname')?.value || '';
-        const dob = document.getElementById('empDob')?.value || '';
-        const pos = document.getElementById('empPosition')?.value || '';
-        const sal = document.getElementById('empSalary')?.value || '';
+        const name = document.getElementById('empName')?.value.trim();
+        const surname = document.getElementById('empSurname')?.value.trim();
+        const dob = document.getElementById('empDob')?.value;
+        const pos = document.getElementById('empPosition')?.value;
+        const sal = document.getElementById('empSalary')?.value;
+
         let valid = true;
-        const nameRe = /^[A-Za-z]{3,}$/;
-        if (!name || !nameRe.test(name)) { document.getElementById('empNameError').style.display = 'block'; valid = false; }
-        else { document.getElementById('empNameError').style.display = 'none'; }
-        const surRe = /^[A-Za-z]{3,}$/;
-        if (!surname || !surRe.test(surname)) { document.getElementById('empSurnameError').style.display = 'block'; valid = false; }
-        else { document.getElementById('empSurnameError').style.display = 'none'; }
-        if (dob) {
-            let age = new Date().getFullYear() - new Date(dob).getFullYear();
-            if (age < 18) { document.getElementById('empDobError').style.display = 'block'; valid = false; }
-            else { document.getElementById('empDobError').style.display = 'none'; }
-        } else { document.getElementById('empDobError').style.display = 'block'; valid = false; }
-        if (!pos) { document.getElementById('empPositionError').style.display = 'block'; valid = false; }
-        else { document.getElementById('empPositionError').style.display = 'none'; }
-        if (!sal || parseFloat(sal) <= 0) { document.getElementById('empSalaryError').style.display = 'block'; valid = false; }
-        else { document.getElementById('empSalaryError').style.display = 'none'; }
+
+        // Имя
+        if (!name) {
+            if (nameError) nameError.style.display = 'block';
+            valid = false;
+        } else if (nameError) nameError.style.display = 'none';
+
+        // Фамилия
+        if (!surname) {
+            if (surnameError) surnameError.style.display = 'block';
+            valid = false;
+        } else if (surnameError) surnameError.style.display = 'none';
+
+        // Дата рождения и возраст
+        let ageValid = true;
+        if (!dob) {
+            if (dobError) dobError.style.display = 'block';
+            valid = false;
+            ageValid = false;
+        } else {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                if (dobError) {
+                    dobError.textContent = 'Employee must be at least 18 years old';
+                    dobError.style.display = 'block';
+                }
+                valid = false;
+                ageValid = false;
+            } else {
+                if (dobError) dobError.style.display = 'none';
+            }
+        }
+        if (!ageValid && dobError && dobError.textContent.includes('18') === false) {
+            dobError.textContent = 'Please enter valid date of birth';
+            dobError.style.display = 'block';
+        }
+
+        // Должность
+        if (!pos) {
+            if (positionError) positionError.style.display = 'block';
+            valid = false;
+        } else if (positionError) positionError.style.display = 'none';
+
+        // Зарплата > 0
+        if (!sal || parseFloat(sal) <= 0) {
+            if (salaryError) salaryError.style.display = 'block';
+            valid = false;
+        } else if (salaryError) salaryError.style.display = 'none';
+
         if (submit) submit.disabled = !valid;
         return valid;
     }
+
     if (add) add.onclick = () => {
         drawer.classList.add('open');
-        ['empName','empSurname','empDob','empPosition','empSalary'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
-        document.querySelectorAll('#employeeForm .form__error').forEach(err => err.style.display = 'none');
+        // Очищаем поля
+        ['empName','empSurname','empDob','empPosition','empSalary'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        // Скрываем все сообщения об ошибках
+        document.querySelectorAll('#employeeForm .form__error').forEach(err => {
+            err.style.display = 'none';
+            if (err.id === 'empDobError') err.textContent = 'Date of Birth is required'; // сброс текста
+        });
         validate();
     };
     if (cancel) cancel.onclick = () => drawer.classList.remove('open');
+
+    // Слушатели ввода
     ['empName','empSurname','empDob','empPosition','empSalary'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', validate);
     });
+
     if (form) form.onsubmit = (e) => {
         e.preventDefault();
-        if (validate()) {
-            const employees = getCurrentEmployees();
-            const newId = employees.length>0 ? Math.max(...employees.map(e=>e.id))+1 : 1;
-            const dob = document.getElementById('empDob').value;
-            const age = new Date().getFullYear() - new Date(dob).getFullYear();
-            employees.push({
-                id: newId, name: document.getElementById('empName').value, surname: document.getElementById('empSurname').value,
-                age, position: document.getElementById('empPosition').value, salary: parseFloat(document.getElementById('empSalary').value),
-                estimatedPayment: parseFloat(document.getElementById('empSalary').value), projectAssignments: [], vacationDays: []
-            });
-            saveToLocalStorage();
-            renderEmployeesTable();
-            drawer.classList.remove('open');
-        }
+        if (!validate()) return;
+
+        const employees = getCurrentEmployees();
+        const newId = employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 1;
+        const dob = document.getElementById('empDob').value;
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+
+        const newEmployee = {
+            id: newId,
+            name: document.getElementById('empName').value.trim(),
+            surname: document.getElementById('empSurname').value.trim(),
+            age: age,
+            position: document.getElementById('empPosition').value,
+            salary: parseFloat(document.getElementById('empSalary').value),
+            estimatedPayment: parseFloat(document.getElementById('empSalary').value),
+            projectAssignments: [],
+            vacationDays: []
+        };
+        employees.push(newEmployee);
+        saveToLocalStorage();
+        renderEmployeesTable();
+        drawer.classList.remove('open');
     };
 }
+
 function setupAddProjectForm() {
     const add = document.getElementById('addProjectBtn');
     const drawer = document.getElementById('projectDrawer');
     const cancel = document.getElementById('cancelProject');
     const form = document.getElementById('projectForm');
     const submit = document.getElementById('submitProject');
+
     function validate() {
-        const name = document.getElementById('projName')?.value || '';
-        const comp = document.getElementById('projCompany')?.value || '';
-        const bud = document.getElementById('projBudget')?.value || '';
-        const cap = document.getElementById('projCapacity')?.value || '';
+        const name = document.getElementById('projName')?.value.trim();
+        const comp = document.getElementById('projCompany')?.value.trim();
+        const bud = document.getElementById('projBudget')?.value;
+        const cap = document.getElementById('projCapacity')?.value;
         let valid = true;
-        const nameRe = /^[A-Za-z0-9\s]{3,}$/;
-        if (!name || !nameRe.test(name)) { document.getElementById('projNameError').style.display = 'block'; valid = false; }
-        else { document.getElementById('projNameError').style.display = 'none'; }
-        const compRe = /^[A-Za-z0-9\s]{2,}$/;
-        if (!comp || !compRe.test(comp)) { document.getElementById('projCompanyError').style.display = 'block'; valid = false; }
-        else { document.getElementById('projCompanyError').style.display = 'none'; }
-        if (!bud || parseFloat(bud) <= 0) { document.getElementById('projBudgetError').style.display = 'block'; valid = false; }
-        else { document.getElementById('projBudgetError').style.display = 'none'; }
-        if (!cap || parseInt(cap) < 1) { document.getElementById('projCapacityError').style.display = 'block'; valid = false; }
-        else { document.getElementById('projCapacityError').style.display = 'none'; }
+
+        if (!name) valid = false;
+        if (!comp) valid = false;
+        if (!bud || parseFloat(bud) <= 0) valid = false;
+        if (!cap || parseInt(cap) < 1) valid = false;
+
         if (submit) submit.disabled = !valid;
         return valid;
     }
+
     if (add) add.onclick = () => {
         drawer.classList.add('open');
-        ['projName','projCompany','projBudget','projCapacity'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
-        document.querySelectorAll('#projectForm .form__error').forEach(err => err.style.display = 'none');
+        ['projName','projCompany','projBudget','projCapacity'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         validate();
     };
     if (cancel) cancel.onclick = () => drawer.classList.remove('open');
+
     ['projName','projCompany','projBudget','projCapacity'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', validate);
     });
+
     if (form) form.onsubmit = (e) => {
         e.preventDefault();
-        if (validate()) {
-            const projects = getCurrentProjects();
-            const newId = projects.length>0 ? Math.max(...projects.map(p=>p.id))+1 : 1;
-            const budget = parseFloat(document.getElementById('projBudget').value);
-            projects.push({
-                id: newId, companyName: document.getElementById('projCompany').value, projectName: document.getElementById('projName').value,
-                budget, employeeCapacity: parseInt(document.getElementById('projCapacity').value), estimatedIncome: budget * 2.4
-            });
-            saveToLocalStorage();
-            renderProjectsTable();
-            drawer.classList.remove('open');
-        }
+        if (!validate()) return;
+
+        const projects = getCurrentProjects();
+        const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1;
+        const budget = parseFloat(document.getElementById('projBudget').value);
+        const newProject = {
+            id: newId,
+            companyName: document.getElementById('projCompany').value.trim(),
+            projectName: document.getElementById('projName').value.trim(),
+            budget: budget,
+            employeeCapacity: parseInt(document.getElementById('projCapacity').value),
+            estimatedIncome: budget * 2.4
+        };
+        projects.push(newProject);
+        saveToLocalStorage();
+        renderProjectsTable();
+        drawer.classList.remove('open');
     };
 }
 
-// ========== ОСНОВНЫЕ РЕНДЕРЫ ТАБЛИЦ ==========
+// ОСНОВНЫЕ РЕНДЕРЫ ТАБЛИЦ
 function renderProjectsTable() {
     const table = document.querySelector('#projectsTable');
     const tbody = table?.querySelector('tbody');
@@ -1261,7 +1403,7 @@ function renderProjectsTable() {
         const row = document.createElement('tr');
         row.innerHTML = `<td>${escapeHtml(proj.companyName)}</td><td>${escapeHtml(proj.projectName)}</td>
             <td>$${proj.budget.toFixed(2)}</td>
-            <td style="${isOver ? 'color:#e74c3c;font-weight:bold' : ''}">${capDisplay}${isOver ? ' ⚠️' : ''}</td>
+            <td style="${isOver ? 'color:#e74c3c;font-weight:bold' : ''}">${capDisplay}${isOver ? 'Warning' : ''}</td>
             <td><button class="show-employees-btn" data-id="${proj.id}" style="background:#4a6a8a;border:none;color:white;padding:5px 12px;border-radius:5px;cursor:pointer;">Show (${projEmps.length})</button></td>
             <td style="color:${profit>=0?'#27ae60':'#e74c3c'};font-weight:bold;">$${profit.toFixed(2)}</td>
             <td><button class="delete-project-btn" data-id="${proj.id}" style="background:#e74c3c;border:none;color:white;padding:5px 10px;border-radius:5px;cursor:pointer;">Delete</button></td>`;
@@ -1340,7 +1482,7 @@ function renderEmployeesTable() {
             <td class="filterable-cell" data-filter="surname">${escapeHtml(emp.surname || '-')}</td>
             <td class="sortable-cell" data-sort="age">${age || '-'}</td>
             <td class="filterable-cell" data-filter="position">${escapeHtml(emp.position || '-')}</td>
-            <td class="sortable-cell" data-sort="salary">$${(emp.salary || 0).toFixed(2)}</td>
+            <td class="sortable-cell" data-sort="salary">$${(emp.salary || 0).toFixed(0)}</td>
             <td class="sortable-cell" data-sort="payment">$${estimatedPayment.toFixed(2)}</td>
             <td class="filterable-cell assignments-cell" data-filter="project">${projectCellContent}</td>
             <td class="sortable-cell" data-sort="projIncome" style="color:${isProfitPositive ? '#27ae60' : '#e74c3c'}; font-weight:bold;">$${totalProfit.toFixed(2)}</td>
@@ -1349,7 +1491,6 @@ function renderEmployeesTable() {
         tbody.appendChild(row);
     });
 
-    // Повторно привязываем обработчики (на всякий случай)
     document.querySelectorAll('.delete-employee-btn').forEach(btn => {
         btn.onclick = (e) => {
             e.stopPropagation();
@@ -1359,7 +1500,7 @@ function renderEmployeesTable() {
     });
 }
 
-// ========== ЕДИНОЕ ПЕРЕОПРЕДЕЛЕНИЕ РЕНДЕРОВ ==========
+// ЕДИНОЕ ПЕРЕОПРЕДЕЛЕНИЕ РЕНДЕРОВ
 const baseRenderProjects = renderProjectsTable;
 const baseRenderEmployees = renderEmployeesTable;
 
@@ -1391,19 +1532,17 @@ window.renderEmployeesTable = function() {
     }, 100);
 };
 
-
-
-
-// ========== ИНИЦИАЛИЗАЦИЯ ==========
+// ИНИЦИАЛИЗАЦИЯ
 function init() {
     setupSidebar();
-    setupTabs();
     setupPeriodSelector();
-    setDefaultPeriod();          // <-- ДОБАВИТЬ ЭТУ СТРОКУ
+    setDefaultPeriod();
     setupSeedDataButton();
     setupAddEmployeeForm();
     setupAddProjectForm();
+    setupTabs();
     loadData();
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
