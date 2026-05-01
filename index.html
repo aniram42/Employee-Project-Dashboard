@@ -109,22 +109,21 @@
         <div class="drawer__content">
             <h2 class="drawer__title">Add New Employee</h2>
             <form id="employeeForm">
-                <!-- Добавлен label для Name -->
                 <label class="form__label">Name: *</label>
                 <label for="empName"></label><input id="empName" type="text" class="form__input" required>
+                <div id="empNameError" class="form__error">Name must be at least 3 characters</div>
 
                 <label class="form__label">Surname: *</label>
                 <label for="empSurname"></label><input type="text" id="empSurname" class="form__input" required>
+                <div id="empSurnameError" class="form__error">Surname must be at least 3 characters</div>
 
-                <label class="form__label">Date of Birth: *</label>
-                <label for="empDob"></label>
-                <input type="date" id="empDob" class="form__input" required>
-                <small style="color:#666; display: block; margin-top: -15px; margin-bottom: 15px; font-size: 12px;">Age must be 18 or older</small>
-                <div id="empDobError" class="form__error">Date of Birth is required</div>
+                <label for="empDob" class="form__label">Date of Birth: *</label>
+                <input type="date" id="empDob" class="form__input">
+                <div id="empDobError" class="form__error">Age must be 18 or older</div>
 
                 <label class="form__label">Position: *</label>
                 <label for="empPosition"></label><select class="form__select" id="empPosition">
-                    <option value="">Select position</option>
+                    <option value="">Please select position</option>
                     <option>Junior</option>
                     <option>Middle</option>
                     <option>Senior</option>
@@ -132,7 +131,6 @@
                     <option>Architect</option>
                     <option>BO</option>
                 </select>
-                <div id="empPositionError" class="form__error">Please select position</div>
 
                 <label class="form__label">Salary: *</label>
                 <label for="empSalary"></label><input type="number" id="empSalary" class="form__input" step="0.01" required>
@@ -153,15 +151,19 @@
                 <label class="form__label">Project Name: *</label>
                 <label for="projName"></label>
                 <input type="text" id="projName" class="form__input" required>
+                <div id="projNameError" class="form__error">Project name must be at least 3 characters</div>
 
                 <label class="form__label">Company Name: *</label>
                 <label for="projCompany"></label><input type="text" id="projCompany" class="form__input" required>
+                <div id="projCompanyError" class="form__error">Company name must be at least 2 characters</div>
 
                 <label class="form__label">Budget: *</label>
                 <label for="projBudget"></label><input class="form__input" id="projBudget" required step="0.01" type="number">
+                <div id="projBudgetError" class="form__error">Budget must be greater than 0</div>
 
                 <label class="form__label">Employee Capacity: *</label>
                 <label for="projCapacity"></label><input type="number" id="projCapacity" class="form__input" required>
+                <div id="projCapacityError" class="form__error">Employee capacity must be at least 1</div>
 
                 <div class="drawer__buttons">
                     <button type="submit" id="submitProject" class="btn btn--green" disabled>Add</button>

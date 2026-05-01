@@ -107,19 +107,36 @@ function saveToLocalStorage() {
 }
 
 async function loadData() {
+    const saved = localStorage.getItem('monthlyData');
+    if (saved) {
+        try {
+            appData = { monthlyData: JSON.parse(saved) };
+            console.log('Data loaded from localStorage');
+        } catch (e) {
+            console.error('Error parsing localStorage', e);
+            await fetchDefaultData();
+        }
+    } else {
+        await fetchDefaultData();
+    }
+    // Синхронизируем currentPeriod с селекторами
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+    if (yearSelect && monthSelect) {
+        currentPeriod = `${yearSelect.value}-${monthSelect.value}`;
+    }
+    renderCurrentTable();
+}
+
+async function fetchDefaultData() {
     try {
         const response = await fetch('database.json');
         appData = await response.json();
         saveToLocalStorage();
-        // Убедимся, что currentPeriod соответствует селектам
-        const yearSelect = document.getElementById('yearSelect');
-        const monthSelect = document.getElementById('monthSelect');
-        if (yearSelect && monthSelect) {
-            currentPeriod = `${yearSelect.value}-${monthSelect.value}`;
-        }
-        renderCurrentTable();
+        console.log('Default data loaded from database.json');
     } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading database.json:', error);
+        appData = { monthlyData: {} };
     }
 }
 
@@ -235,80 +252,126 @@ function deleteProject(projectId) {
 
 // INLINE EDITING (Position, Salary)
 function makeEditable() {
-    // Устанавливаем обработчики на существующие ячейки (только один раз)
-    document.querySelectorAll('#employeesTable tbody tr').forEach(row => {
+    const table = document.querySelector('#employeesTable');
+    if (!table) return;
+
+    // Функция для поля Position
+    function editPosition(cell, employeeId, currentValue) {
+        const select = document.createElement('select');
+        select.innerHTML = `
+            <option value="Junior">Junior</option>
+            <option value="Middle">Middle</option>
+            <option value="Senior">Senior</option>
+            <option value="Lead">Lead</option>
+            <option value="Architect">Architect</option>
+            <option value="BO">BO</option>
+        `;
+        select.value = currentValue;
+        cell.innerHTML = '';
+        cell.appendChild(select);
+        select.focus();
+
+        const save = () => {
+            const newValue = select.value;
+            if (newValue !== currentValue) {
+                // Обновляем данные
+                const employees = getCurrentEmployees();
+                const emp = employees.find(e => e.id === employeeId);
+                if (emp) {
+                    emp.position = newValue;
+                    saveToLocalStorage();
+                    // Обновляем ячейку без перерисовки всей таблицы
+                    cell.innerHTML = escapeHtml(newValue);
+                    // Возвращаем курсор
+                    cell.style.cursor = 'pointer';
+                    // Перепривязываем обработчик клика (можно просто заново вызвать makeEditable для этой ячейки)
+                    makeEditable(); // перевесит обработчики на всей таблице, но не перерисует строки
+                } else {
+                    cell.innerHTML = escapeHtml(currentValue);
+                }
+            } else {
+                cell.innerHTML = escapeHtml(currentValue);
+            }
+            cell.removeAttribute('data-editing');
+        };
+
+        select.addEventListener('blur', save);
+        select.addEventListener('change', () => select.blur());
+        // Запрещаем всплытие, чтобы не вызвать повторное редактирование
+        select.addEventListener('click', (e) => e.stopPropagation());
+        cell.setAttribute('data-editing', 'true');
+    }
+
+    // Функция для поля Salary
+    function editSalary(cell, employeeId, currentSalary) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = '100';
+        input.value = currentSalary;
+        input.style.width = '100px';
+        cell.innerHTML = '';
+        cell.appendChild(input);
+        input.focus();
+
+        const save = () => {
+            let newSalary = parseFloat(input.value);
+            if (isNaN(newSalary) || newSalary <= 0) newSalary = currentSalary;
+            if (newSalary !== currentSalary) {
+                const employees = getCurrentEmployees();
+                const emp = employees.find(e => e.id === employeeId);
+                if (emp) {
+                    emp.salary = newSalary;
+                    emp.estimatedPayment = newSalary;
+                    saveToLocalStorage();
+                    cell.innerHTML = `$${newSalary.toFixed(0)}`;
+                } else {
+                    cell.innerHTML = `$${currentSalary.toFixed(0)}`;
+                }
+            } else {
+                cell.innerHTML = `$${currentSalary.toFixed(0)}`;
+            }
+            cell.style.cursor = 'pointer';
+            makeEditable();
+            cell.removeAttribute('data-editing');
+        };
+
+        input.addEventListener('blur', save);
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') input.blur(); });
+        input.addEventListener('click', (e) => e.stopPropagation());
+        cell.setAttribute('data-editing', 'true');
+    }
+
+    // Навешиваем обработчики на все ячейки, которые ещё не редактируются и не имеют обработчика
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const deleteBtn = row.querySelector('.delete-employee-btn');
+        if (!deleteBtn) return;
+        const employeeId = parseInt(deleteBtn.dataset.id);
+        if (isNaN(employeeId)) return;
+
         const positionCell = row.cells[3];
         const salaryCell = row.cells[4];
-        const employeeId = parseInt(row.querySelector('.delete-employee-btn')?.dataset.id);
 
-        if (positionCell && !positionCell.hasAttribute('data-editable')) {
+        if (positionCell && !positionCell.hasAttribute('data-editable') && !positionCell.hasAttribute('data-editing')) {
             positionCell.setAttribute('data-editable', 'true');
             positionCell.style.cursor = 'pointer';
-            positionCell.addEventListener('click', (e) => {
+            positionCell.onclick = (e) => {
                 e.stopPropagation();
+                if (positionCell.hasAttribute('data-editing')) return;
                 const currentValue = positionCell.textContent.trim();
-                const select = document.createElement('select');
-                select.innerHTML = `<option value="Junior">Junior</option>
-                    <option value="Middle">Middle</option>
-                    <option value="Senior">Senior</option>
-                    <option value="Lead">Lead</option>
-                    <option value="Architect">Architect</option>
-                    <option value="BO">BO</option>`;
-                select.value = currentValue;
-                positionCell.innerHTML = '';
-                positionCell.appendChild(select);
-                select.focus();
-                select.addEventListener('blur', () => {
-                    const newValue = select.value;
-                    const employees = getCurrentEmployees();
-                    const emp = employees.find(e => e.id === employeeId);
-                    if (emp && newValue !== emp.position) {
-                        emp.position = newValue;
-                        saveToLocalStorage();
-                        renderEmployeesTable(); // перерисовка вернёт текст
-                    } else {
-                        renderEmployeesTable();
-                    }
-                });
-                select.addEventListener('change', () => select.blur());
-            });
+                editPosition(positionCell, employeeId, currentValue);
+            };
         }
 
-        if (salaryCell && !salaryCell.hasAttribute('data-editable')) {
+        if (salaryCell && !salaryCell.hasAttribute('data-editable') && !salaryCell.hasAttribute('data-editing')) {
             salaryCell.setAttribute('data-editable', 'true');
             salaryCell.style.cursor = 'pointer';
-            salaryCell.addEventListener('click', (e) => {
+            salaryCell.onclick = (e) => {
                 e.stopPropagation();
+                if (salaryCell.hasAttribute('data-editing')) return;
                 const currentSalary = parseFloat(salaryCell.textContent.replace('$', ''));
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.step = '100';
-                input.value = currentSalary;
-                input.style.width = '100px';
-                salaryCell.innerHTML = '';
-                salaryCell.appendChild(input);
-                input.focus();
-                input.addEventListener('blur', () => {
-                    const newSalary = parseFloat(input.value);
-                    if (!isNaN(newSalary) && newSalary > 0) {
-                        const employees = getCurrentEmployees();
-                        const emp = employees.find(e => e.id === employeeId);
-                        if (emp && newSalary !== emp.salary) {
-                            emp.salary = newSalary;
-                            emp.estimatedPayment = newSalary;
-                            saveToLocalStorage();
-                            renderEmployeesTable();
-                        } else {
-                            renderEmployeesTable();
-                        }
-                    } else {
-                        renderEmployeesTable();
-                    }
-                });
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') input.blur();
-                });
-            });
+                editSalary(salaryCell, employeeId, currentSalary);
+            };
         }
     });
 }
@@ -328,6 +391,62 @@ function saveAssignment(employeeId, projectId, capacity, fit) {
     saveToLocalStorage();
     renderEmployeesTable();
     renderProjectsTable();
+}
+
+function showUnassignConfirmation(employeeId, projectId, assignment) {
+    const employee = getCurrentEmployees().find(e => e.id === employeeId);
+    const project = getCurrentProjects().find(p => p.id === projectId);
+    if (!employee || !project) return;
+    const [year, month] = currentPeriod.split('-').map(Number);
+    const vacationCoeff = calculateVacationCoefficient(employee.vacationDays, year, month);
+    const revenue = calculateEmployeeRevenue(employee, project, assignment, vacationCoeff, getCurrentEmployees());
+    const cost = employee.salary * Math.max(0.5, assignment.capacity);
+    const profitImpact = revenue - cost;
+
+    const overlayConfirm = document.createElement('div');
+    overlayConfirm.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1200;display:flex;align-items:center;justify-content:center;';
+    const popupConfirm = document.createElement('div');
+    popupConfirm.style.cssText = 'background:white;border-radius:16px;padding:24px;width:450px;max-width:90vw;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    popupConfirm.innerHTML = `
+        <h3 style="margin-top:0;">Confirm Unassignment</h3>
+        <p><strong>Employee:</strong> ${escapeHtml(employee.name)} ${escapeHtml(employee.surname)}</p>
+        <p><strong>Project:</strong> ${escapeHtml(project.projectName)}</p>
+        <p><strong>Capacity:</strong> ${assignment.capacity.toFixed(2)}</p>
+        <p><strong>Fit:</strong> ${assignment.fit.toFixed(2)}</p>
+        <hr>
+        <p><strong>Financial Impact:</strong></p>
+        <p>Revenue: <span style="color:#27ae60;">+$${revenue.toFixed(2)}</span> → <span style="color:#e74c3c;">$0</span></p>
+        <p>Cost: <span style="color:#e74c3c;">-$${cost.toFixed(2)}</span> → <span style="color:#27ae60;">$0</span></p>
+        <p><strong>Net Change: <span style="color:${profitImpact >= 0 ? '#e74c3c' : '#27ae60'};">${profitImpact >= 0 ? '-' : '+'}$${Math.abs(profitImpact).toFixed(2)}</span></strong></p>
+        <div style="display:flex;gap:12px;margin-top:20px;">
+            <button id="confirmUnassign" style="flex:1;padding:10px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Confirm</button>
+            <button id="cancelUnassign" style="flex:1;padding:10px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+        </div>
+    `;
+    overlayConfirm.appendChild(popupConfirm);
+    document.body.appendChild(overlayConfirm);
+
+    const cleanup = () => overlayConfirm.remove();
+    popupConfirm.querySelector('#confirmUnassign').onclick = () => {
+        const employeesList = getCurrentEmployees();
+        const emp = employeesList.find(e => e.id === employeeId);
+        if (emp && emp.projectAssignments) {
+            emp.projectAssignments = emp.projectAssignments.filter(a => a.projectId !== projectId);
+            saveToLocalStorage();
+            renderEmployeesTable();
+            renderProjectsTable();
+            // Закрываем попап проекта, если он открыт
+            const projOverlay = document.querySelector('#projectEmployeesOverlay');
+            if (projOverlay) {
+                // Находим кнопку закрытия и кликаем
+                const closeBtn = projOverlay.querySelector('.close-popup-btn');
+                if (closeBtn) closeBtn.click();
+            }
+        }
+        cleanup();
+    };
+    popupConfirm.querySelector('#cancelUnassign').onclick = cleanup;
+    overlayConfirm.onclick = (e) => { if (e.target === overlayConfirm) cleanup(); };
 }
 
 // ПОЗИЦИОНИРОВАНИЕ ПОПАПА НАЗНАЧЕНИЯ
@@ -560,7 +679,7 @@ function showProjectEmployees(projectId) {
     const [year, month] = currentPeriod.split('-').map(Number);
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    // Удаляем предыдущий попап, если он был (на случай быстрых кликов)
+    // Удаляем предыдущий попап
     const existingOverlay = document.querySelector('#projectEmployeesOverlay');
     if (existingOverlay) existingOverlay.remove();
 
@@ -585,7 +704,9 @@ function showProjectEmployees(projectId) {
                 const profit = revenue - cost;
                 const vacationDaysCount = emp.vacationDays?.length || 0;
                 rows += `<tr>
-                    <td style="padding:10px; border-bottom:1px solid #eee;">${escapeHtml(emp.name)} ${escapeHtml(emp.surname)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">
+                        <span class="employee-name-link" data-employee-id="${emp.id}" data-project-id="${projectId}" style="color:#2c3e50; text-decoration:underline; cursor:pointer;">${escapeHtml(emp.name)} ${escapeHtml(emp.surname)}</span>
+                    </td>
                     <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${assign.capacity.toFixed(2)}</td>
                     <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${assign.fit.toFixed(2)}</td>
                     <td style="padding:10px; text-align:center; border-bottom:1px solid #eee;">${vacationDaysCount}</td>
@@ -601,7 +722,7 @@ function showProjectEmployees(projectId) {
             }
         });
 
-        // Подсчет итогов
+        // Итоги
         let totEff = 0, totRev = 0, totCost = 0, totProfit = 0;
         projEmps.forEach(emp => {
             const assign = emp.projectAssignments.find(a => a.projectId === projectId);
@@ -647,55 +768,103 @@ function showProjectEmployees(projectId) {
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
 
-    // Функция закрытия и обновления (переоткрытия)
-    const refreshPopup = () => {
-        overlay.remove();
-        showProjectEmployees(projectId);
-    };
-
+    // Функция закрытия попапа
     const closePopup = () => overlay.remove();
     popup.querySelector('.close-popup-btn').onclick = closePopup;
     overlay.onclick = (e) => { if (e.target === overlay) closePopup(); };
 
-    // Обработчики для Unassign
+    // Функция обновления попапа (переоткрытие)
+    const refreshPopup = () => {
+        overlay.remove();
+        setTimeout(() => showProjectEmployees(projectId), 50);
+    };
+
+    // Обработчики для кнопок Unassign (с финансовым попапом)
     popup.querySelectorAll('.unassign-employee-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const empId = parseInt(btn.dataset.employeeId);
             const projId = parseInt(btn.dataset.projectId);
-            if (confirm(`Remove employee from this project?`)) {
-                const employeesList = getCurrentEmployees();
-                const emp = employeesList.find(e => e.id === empId);
-                if (emp && emp.projectAssignments) {
-                    emp.projectAssignments = emp.projectAssignments.filter(a => a.projectId !== projId);
-                    saveToLocalStorage();
-                    renderProjectsTable();
-                    renderEmployeesTable();
-                    refreshPopup(); // обновляем попап после удаления
-                }
+            const emp = getCurrentEmployees().find(e => e.id === empId);
+            if (!emp) return;
+            const assignment = emp.projectAssignments?.find(a => a.projectId === projId);
+            if (assignment) {
+                showUnassignConfirmation(empId, projId, assignment);
             }
         });
     });
 
-    // Обработчики для Edit – открываем окно редактирования назначения
+    // Обработчики для кнопок Edit
     popup.querySelectorAll('.edit-assignment-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const empId = parseInt(btn.dataset.employeeId);
-            // Находим текущее назначение
             const emp = getCurrentEmployees().find(e => e.id === empId);
             if (!emp) return;
             const currentAssignment = emp.projectAssignments?.find(a => a.projectId === projectId);
             if (!currentAssignment) return;
-
-            // Создаём временную функцию save, которая после сохранения обновит попап
             const saveAndRefresh = (employeeId, projectId, newCapacity, newFit) => {
                 saveAssignment(employeeId, projectId, newCapacity, newFit);
-                // После сохранения обновляем попап (переоткрываем)
                 refreshPopup();
             };
-            // Открываем модалку позиционирования (используем существующую функцию)
             openAssignmentPopupWithPosition(empId, projectId, saveAndRefresh, e.target);
+        });
+    });
+
+    // ========== КЛИКАБЕЛЬНЫЕ ИМЕНА – МЕНЮ ДЕЙСТВИЙ ==========
+    popup.querySelectorAll('.employee-name-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const empId = parseInt(link.dataset.employeeId);
+            const emp = getCurrentEmployees().find(e => e.id === empId);
+            if (!emp) return;
+
+            // Удаляем предыдущее меню
+            const existingMenu = document.querySelector('.employee-action-menu');
+            if (existingMenu) existingMenu.remove();
+
+            // Создаём меню с двумя пунктами
+            const menu = document.createElement('div');
+            menu.className = 'employee-action-menu';
+            menu.style.cssText = 'position:fixed; background:white; border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); z-index:1300; min-width:180px;';
+            menu.innerHTML = `
+            <div style="padding:8px 12px; border-bottom:1px solid #eee; font-weight:bold; background:#f5f5f5;">${escapeHtml(emp.name)} ${escapeHtml(emp.surname)}</div>
+            <div class="menu-item" data-action="employeesTab" style="padding:8px 12px; cursor:pointer;">See in Employees Tab</div>
+            <div class="menu-item" data-action="unassign" style="padding:8px 12px; cursor:pointer;">Unassign from Project</div>
+        `;
+            const rect = link.getBoundingClientRect();
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 5) + 'px';
+            document.body.appendChild(menu);
+
+            // Упрощённая обработка действий (только employeesTab и unassign)
+            const handleAction = (action) => {
+                menu.remove();
+                if (action === 'employeesTab') {
+                    document.querySelector('.nav__link[data-page="employees"]').click();
+                    setTimeout(() => {
+                        const row = document.querySelector(`#employeesTable .delete-employee-btn[data-id="${empId}"]`);
+                        if (row) row.closest('tr').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                } else if (action === 'unassign') {
+                    const assignment = emp.projectAssignments?.find(a => a.projectId === projectId);
+                    if (assignment) showUnassignConfirmation(empId, projectId, assignment);
+                }
+            };
+
+            menu.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleAction(item.dataset.action);
+                });
+            });
+
+            // Закрытие меню при клике вне
+            const closeMenu = (e) => {
+                if (!menu.contains(e.target)) menu.remove();
+                document.removeEventListener('click', closeMenu);
+            };
+            setTimeout(() => document.addEventListener('click', closeMenu), 0);
         });
     });
 }
@@ -770,9 +939,10 @@ function addAssignButtonsWithPositioning() {
             const assignBtn = document.createElement('button');
             assignBtn.textContent = 'Assign';
             assignBtn.className = 'assign-btn';
-            assignBtn.style.cssText = `background:${isMax ? '#95a5a6' : '#27ae60'};border:none;color:white;padding:5px 10px;border-radius:5px;cursor:${isMax ? 'not-allowed' : 'pointer'};margin-right:5px;`;
+            assignBtn.disabled = isMax;
+            assignBtn.style.cssText = `background:${isMax ? '#95a5a6' : '#27ae60'};border:none;color:white;padding:5px 10px;border-radius:5px;cursor:${isMax ? 'not-allowed' : 'pointer'};margin-right:5px;opacity:${isMax ? '0.6' : '1'};`;
             assignBtn.onclick = () => {
-                if (isMax) { alert(`Employee at max capacity (${totalAssigned.toFixed(2)}/1.5)`); return; }
+                if (isMax) return; // дополнительная страховка, но кнопка уже disabled
                 const projects = getCurrentProjects();
                 if (!projects.length) { alert('No projects available'); return; }
 
@@ -1179,7 +1349,6 @@ function setupAddEmployeeForm() {
     const form = document.getElementById('employeeForm');
     const submit = document.getElementById('submitEmployee');
 
-    // Элементы для отображения ошибок (если есть в HTML)
     const nameError = document.getElementById('empNameError');
     const surnameError = document.getElementById('empSurnameError');
     const dobError = document.getElementById('empDobError');
@@ -1187,32 +1356,29 @@ function setupAddEmployeeForm() {
     const salaryError = document.getElementById('empSalaryError');
 
     function validate() {
-        const name = document.getElementById('empName')?.value.trim();
-        const surname = document.getElementById('empSurname')?.value.trim();
-        const dob = document.getElementById('empDob')?.value;
-        const pos = document.getElementById('empPosition')?.value;
-        const sal = document.getElementById('empSalary')?.value;
-
         let valid = true;
 
-        // Имя
-        if (!name) {
+        // Имя: только буквы, мин 3
+        const name = document.getElementById('empName')?.value.trim();
+        const nameRegex = /^[A-Za-z]{3,}$/;
+        if (!name || !nameRegex.test(name)) {
             if (nameError) nameError.style.display = 'block';
             valid = false;
         } else if (nameError) nameError.style.display = 'none';
 
-        // Фамилия
-        if (!surname) {
+        // Фамилия: только буквы, мин 3
+        const surname = document.getElementById('empSurname')?.value.trim();
+        const surnameRegex = /^[A-Za-z]{3,}$/;
+        if (!surname || !surnameRegex.test(surname)) {
             if (surnameError) surnameError.style.display = 'block';
             valid = false;
         } else if (surnameError) surnameError.style.display = 'none';
 
-        // Дата рождения и возраст
-        let ageValid = true;
+        // Дата рождения и возраст 18+
+        const dob = document.getElementById('empDob')?.value;
         if (!dob) {
             if (dobError) dobError.style.display = 'block';
             valid = false;
-            ageValid = false;
         } else {
             const birthDate = new Date(dob);
             const today = new Date();
@@ -1222,29 +1388,25 @@ function setupAddEmployeeForm() {
                 age--;
             }
             if (age < 18) {
-                if (dobError) {
-                    dobError.textContent = 'Employee must be at least 18 years old';
-                    dobError.style.display = 'block';
-                }
+                if (dobError) dobError.style.display = 'block';
                 valid = false;
-                ageValid = false;
             } else {
                 if (dobError) dobError.style.display = 'none';
             }
         }
-        if (!ageValid && dobError && dobError.textContent.includes('18') === false) {
-            dobError.textContent = 'Please enter valid date of birth';
-            dobError.style.display = 'block';
-        }
 
-        // Должность
+        // Должность выбрана
+        const pos = document.getElementById('empPosition')?.value;
         if (!pos) {
             if (positionError) positionError.style.display = 'block';
             valid = false;
         } else if (positionError) positionError.style.display = 'none';
 
-        // Зарплата > 0
-        if (!sal || parseFloat(sal) <= 0) {
+        // Зарплата: положительное число, до 2 знаков
+        const salRaw = document.getElementById('empSalary')?.value;
+        const salary = parseFloat(salRaw);
+        const salaryRegex = /^\d+(\.\d{1,2})?$/;
+        if (!salRaw || salary <= 0 || !salaryRegex.test(salRaw)) {
             if (salaryError) salaryError.style.display = 'block';
             valid = false;
         } else if (salaryError) salaryError.style.display = 'none';
@@ -1255,21 +1417,18 @@ function setupAddEmployeeForm() {
 
     if (add) add.onclick = () => {
         drawer.classList.add('open');
-        // Очищаем поля
         ['empName','empSurname','empDob','empPosition','empSalary'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
-        // Скрываем все сообщения об ошибках
-        document.querySelectorAll('#employeeForm .form__error').forEach(err => {
-            err.style.display = 'none';
-            if (err.id === 'empDobError') err.textContent = 'Date of Birth is required'; // сброс текста
+        // Скрываем все ошибки (текст не меняем)
+        [nameError, surnameError, dobError, positionError, salaryError].forEach(err => {
+            if (err) err.style.display = 'none';
         });
         validate();
     };
     if (cancel) cancel.onclick = () => drawer.classList.remove('open');
 
-    // Слушатели ввода
     ['empName','empSurname','empDob','empPosition','empSalary'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', validate);
@@ -1288,14 +1447,17 @@ function setupAddEmployeeForm() {
         const monthDiff = today.getMonth() - birthDate.getMonth();
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
 
+        let salary = parseFloat(document.getElementById('empSalary').value);
+        salary = Math.round(salary * 100) / 100;
+
         const newEmployee = {
             id: newId,
             name: document.getElementById('empName').value.trim(),
             surname: document.getElementById('empSurname').value.trim(),
             age: age,
             position: document.getElementById('empPosition').value,
-            salary: parseFloat(document.getElementById('empSalary').value),
-            estimatedPayment: parseFloat(document.getElementById('empSalary').value),
+            salary: salary,
+            estimatedPayment: salary,
             projectAssignments: [],
             vacationDays: []
         };
@@ -1313,17 +1475,55 @@ function setupAddProjectForm() {
     const form = document.getElementById('projectForm');
     const submit = document.getElementById('submitProject');
 
+    // Элементы для отображения ошибок (добавьте их в HTML, если отсутствуют)
+    const nameError = document.getElementById('projNameError');
+    const companyError = document.getElementById('projCompanyError');
+    const budgetError = document.getElementById('projBudgetError');
+    const capacityError = document.getElementById('projCapacityError');
+
     function validate() {
-        const name = document.getElementById('projName')?.value.trim();
-        const comp = document.getElementById('projCompany')?.value.trim();
-        const bud = document.getElementById('projBudget')?.value;
-        const cap = document.getElementById('projCapacity')?.value;
         let valid = true;
 
-        if (!name) valid = false;
-        if (!comp) valid = false;
-        if (!bud || parseFloat(bud) <= 0) valid = false;
-        if (!cap || parseInt(cap) < 1) valid = false;
+        // 1. Название проекта: обязательное, минимум 3 буквенно-цифровых символа (можно пробелы)
+        const name = document.getElementById('projName')?.value.trim();
+        const nameRegex = /^[A-Za-z0-9\s]{3,}$/;
+        if (!name || !nameRegex.test(name)) {
+            if (nameError) nameError.style.display = 'block';
+            valid = false;
+        } else {
+            if (nameError) nameError.style.display = 'none';
+        }
+
+        // 2. Название компании: обязательное, минимум 2 буквенно-цифровых символа (можно пробелы)
+        const company = document.getElementById('projCompany')?.value.trim();
+        const companyRegex = /^[A-Za-z0-9\s]{2,}$/;
+        if (!company || !companyRegex.test(company)) {
+            if (companyError) companyError.style.display = 'block';
+            valid = false;
+        } else {
+            if (companyError) companyError.style.display = 'none';
+        }
+
+        // 3. Бюджет: положительное число, максимум 2 знака после запятой
+        const budgetRaw = document.getElementById('projBudget')?.value;
+        const budget = parseFloat(budgetRaw);
+        const budgetRegex = /^\d+(\.\d{1,2})?$/; // целое или до 2 знаков
+        if (!budgetRaw || budget <= 0 || !budgetRegex.test(budgetRaw)) {
+            if (budgetError) budgetError.style.display = 'block';
+            valid = false;
+        } else {
+            if (budgetError) budgetError.style.display = 'none';
+        }
+
+        // 4. Employee Capacity: целое число, минимум 1
+        const capacityRaw = document.getElementById('projCapacity')?.value;
+        const capacity = parseInt(capacityRaw, 10);
+        if (!capacityRaw || isNaN(capacity) || capacity < 1 || !Number.isInteger(capacity)) {
+            if (capacityError) capacityError.style.display = 'block';
+            valid = false;
+        } else {
+            if (capacityError) capacityError.style.display = 'none';
+        }
 
         if (submit) submit.disabled = !valid;
         return valid;
@@ -1334,6 +1534,10 @@ function setupAddProjectForm() {
         ['projName','projCompany','projBudget','projCapacity'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
+        });
+        // Скрыть все сообщения об ошибках
+        [nameError, companyError, budgetError, capacityError].forEach(err => {
+            if (err) err.style.display = 'none';
         });
         validate();
     };
@@ -1351,13 +1555,15 @@ function setupAddProjectForm() {
         const projects = getCurrentProjects();
         const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1;
         const budget = parseFloat(document.getElementById('projBudget').value);
+        // Округляем бюджет до 2 знаков (на всякий случай)
+        const roundedBudget = Math.round(budget * 100) / 100;
         const newProject = {
             id: newId,
             companyName: document.getElementById('projCompany').value.trim(),
             projectName: document.getElementById('projName').value.trim(),
-            budget: budget,
-            employeeCapacity: parseInt(document.getElementById('projCapacity').value),
-            estimatedIncome: budget * 2.4
+            budget: roundedBudget,
+            employeeCapacity: parseInt(document.getElementById('projCapacity').value, 10),
+            estimatedIncome: roundedBudget * 2.4
         };
         projects.push(newProject);
         saveToLocalStorage();
