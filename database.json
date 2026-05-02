@@ -1,0 +1,302 @@
+{
+  "monthlyData": {
+    "2025-0": {
+      "period": "January 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App", "budget": 50000, "employeeCapacity": 3, "estimatedIncome": 120000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 34, "position": "Senior", "salary": 5000, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [5, 6, 7] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 32, "position": "Middle", "salary": 3500, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [3, 4, 5] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 36, "position": "Lead", "salary": 7000, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [15, 16, 17] }
+      ]
+    },
+    "2025-1": {
+      "period": "February 2025",
+      "projects": [
+        { "id": 1, "companyName": "WebSolutions", "projectName": "E-commerce", "budget": 55000, "employeeCapacity": 3, "estimatedIncome": 132000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Alex", "surname": "Brown", "age": 33, "position": "Architect", "salary": 8000, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [1, 2, 3] },
+        { "id": 2, "name": "Emily", "surname": "Davis", "age": 31, "position": "Middle", "salary": 3800, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [8, 9, 10] }
+      ]
+    },
+    "2025-2": {
+      "period": "March 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Cloud Platform", "budget": 60000, "employeeCapacity": 3, "estimatedIncome": 144000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Sarah", "surname": "Williams", "age": 29, "position": "Junior", "salary": 2500, "projectAssignments": [{ "projectId": 1, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [22, 23, 24] },
+        { "id": 2, "name": "David", "surname": "Wilson", "age": 39, "position": "Lead", "salary": 7200, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [14, 15, 16] },
+        { "id": 3, "name": "Lisa", "surname": "Martinez", "age": 30, "position": "Senior", "salary": 5500, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [20, 21, 22] }
+      ]
+    },
+    "2025-3": {
+      "period": "April 2025",
+      "projects": [
+        { "id": 1, "companyName": "DataSoft", "projectName": "Analytics", "budget": 48000, "employeeCapacity": 2, "estimatedIncome": 115200 }
+      ],
+      "employees": [
+        { "id": 1, "name": "James", "surname": "Anderson", "age": 28, "position": "Junior", "salary": 2800, "projectAssignments": [{ "projectId": 1, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [11, 12, 13] },
+        { "id": 2, "name": "Maria", "surname": "Garcia", "age": 35, "position": "Middle", "salary": 4200, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [4, 5, 6] }
+      ]
+    },
+    "2025-4": {
+      "period": "May 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App", "budget": 52000, "employeeCapacity": 3, "estimatedIncome": 124800 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 34, "position": "Senior", "salary": 5100, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [7, 8, 9] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 32, "position": "Middle", "salary": 3600, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [5, 6, 7] }
+      ]
+    },
+    "2025-5": {
+      "period": "June 2025",
+      "projects": [
+        { "id": 1, "companyName": "WebSolutions", "projectName": "E-commerce", "budget": 58000, "employeeCapacity": 3, "estimatedIncome": 139200 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Alex", "surname": "Brown", "age": 33, "position": "Architect", "salary": 8200, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [3, 4, 5] },
+        { "id": 2, "name": "Emily", "surname": "Davis", "age": 31, "position": "Middle", "salary": 3900, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [10, 11, 12] },
+        { "id": 3, "name": "Robert", "surname": "Taylor", "age": 27, "position": "Junior", "salary": 3000, "projectAssignments": [{ "projectId": 1, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [17, 18, 19] }
+      ]
+    },
+    "2025-6": {
+      "period": "July 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Cloud Platform", "budget": 65000, "employeeCapacity": 3, "estimatedIncome": 156000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Sarah", "surname": "Williams", "age": 29, "position": "Junior", "salary": 2700, "projectAssignments": [{ "projectId": 1, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [23, 24, 25] },
+        { "id": 2, "name": "David", "surname": "Wilson", "age": 39, "position": "Lead", "salary": 7300, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [16, 17, 18] }
+      ]
+    },
+    "2025-7": {
+      "period": "August 2025",
+      "projects": [
+        { "id": 1, "companyName": "DataSoft", "projectName": "Analytics", "budget": 50000, "employeeCapacity": 2, "estimatedIncome": 120000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "James", "surname": "Anderson", "age": 28, "position": "Junior", "salary": 2900, "projectAssignments": [{ "projectId": 1, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [13, 14, 15] },
+        { "id": 2, "name": "Maria", "surname": "Garcia", "age": 35, "position": "Middle", "salary": 4300, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [6, 7, 8] }
+      ]
+    },
+    "2025-8": {
+      "period": "September 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App", "budget": 55000, "employeeCapacity": 3, "estimatedIncome": 132000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 34, "position": "Senior", "salary": 5200, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [9, 10, 11] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 32, "position": "Middle", "salary": 3700, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [7, 8, 9] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 36, "position": "Lead", "salary": 7100, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [19, 20, 21] }
+      ]
+    },
+    "2025-9": {
+      "period": "October 2025",
+      "projects": [
+        { "id": 1, "companyName": "WebSolutions", "projectName": "E-commerce", "budget": 60000, "employeeCapacity": 3, "estimatedIncome": 144000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Alex", "surname": "Brown", "age": 33, "position": "Architect", "salary": 8300, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [5, 6, 7] },
+        { "id": 2, "name": "Emily", "surname": "Davis", "age": 31, "position": "Middle", "salary": 4000, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [12, 13, 14] }
+      ]
+    },
+    "2025-10": {
+      "period": "November 2025",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Cloud Platform", "budget": 68000, "employeeCapacity": 3, "estimatedIncome": 163200 }
+      ],
+      "employees": [
+        { "id": 1, "name": "Sarah", "surname": "Williams", "age": 29, "position": "Junior", "salary": 2800, "projectAssignments": [{ "projectId": 1, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [25, 26, 27] },
+        { "id": 2, "name": "David", "surname": "Wilson", "age": 39, "position": "Lead", "salary": 7400, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [18, 19, 20] },
+        { "id": 3, "name": "Lisa", "surname": "Martinez", "age": 30, "position": "Senior", "salary": 5600, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [22, 23, 24] }
+      ]
+    },
+    "2025-11": {
+      "period": "December 2025",
+      "projects": [
+        { "id": 1, "companyName": "DataSoft", "projectName": "Analytics", "budget": 52000, "employeeCapacity": 2, "estimatedIncome": 124800 }
+      ],
+      "employees": [
+        { "id": 1, "name": "James", "surname": "Anderson", "age": 28, "position": "Junior", "salary": 3000, "projectAssignments": [{ "projectId": 1, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [15, 16, 17] },
+        { "id": 2, "name": "Maria", "surname": "Garcia", "age": 35, "position": "Middle", "salary": 4400, "projectAssignments": [{ "projectId": 1, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [8, 9, 10] }
+      ]
+    },
+    "2026-0": {
+      "period": "January 2026",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App Pro", "budget": 70000, "employeeCapacity": 4, "estimatedIncome": 168000 },
+        { "id": 2, "companyName": "WebSolutions", "projectName": "E-commerce Plus", "budget": 80000, "employeeCapacity": 4, "estimatedIncome": 192000 },
+        { "id": 3, "companyName": "DataSoft", "projectName": "Analytics Pro", "budget": 60000, "employeeCapacity": 3, "estimatedIncome": 144000 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 35, "position": "Senior", "salary": 5500, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [5, 6, 7] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 33, "position": "Middle", "salary": 4000, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [3, 4, 5] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 37, "position": "Lead", "salary": 7500, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [15, 16, 17] },
+        { "id": 4, "name": "Alex", "surname": "Brown", "age": 34, "position": "Architect", "salary": 8500, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [1, 2, 3] },
+        { "id": 5, "name": "Emily", "surname": "Davis", "age": 32, "position": "Middle", "salary": 4200, "projectAssignments": [{ "projectId": 2, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [8, 9, 10] },
+        { "id": 6, "name": "Sarah", "surname": "Williams", "age": 30, "position": "Junior", "salary": 3000, "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [22, 23, 24] },
+        { "id": 7, "name": "David", "surname": "Wilson", "age": 40, "position": "Lead", "salary": 7800, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [14, 15, 16] },
+        { "id": 8, "name": "James", "surname": "Anderson", "age": 29, "position": "Junior", "salary": 3200, "projectAssignments": [{ "projectId": 3, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [11, 12, 13] },
+        { "id": 9, "name": "Maria", "surname": "Garcia", "age": 36, "position": "Middle", "salary": 4800, "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [4, 5, 6] }
+      ]
+    },
+    "2026-1": {
+      "period": "February 2026",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App Pro", "budget": 72000, "employeeCapacity": 4, "estimatedIncome": 172800 },
+        { "id": 2, "companyName": "WebSolutions", "projectName": "E-commerce Plus", "budget": 82000, "employeeCapacity": 4, "estimatedIncome": 196800 },
+        { "id": 3, "companyName": "DataSoft", "projectName": "Analytics Pro", "budget": 62000, "employeeCapacity": 3, "estimatedIncome": 148800 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 35, "position": "Senior", "salary": 5600, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [7, 8, 9] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 33, "position": "Middle", "salary": 4100, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [5, 6, 7] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 37, "position": "Lead", "salary": 7600, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [17, 18, 19] },
+        { "id": 4, "name": "Alex", "surname": "Brown", "age": 34, "position": "Architect", "salary": 8600, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [3, 4, 5] },
+        { "id": 5, "name": "Emily", "surname": "Davis", "age": 32, "position": "Middle", "salary": 4300, "projectAssignments": [{ "projectId": 2, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [10, 11, 12] },
+        { "id": 6, "name": "Sarah", "surname": "Williams", "age": 30, "position": "Junior", "salary": 3100, "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [24, 25, 26] },
+        { "id": 7, "name": "David", "surname": "Wilson", "age": 40, "position": "Lead", "salary": 7900, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [16, 17, 18] },
+        { "id": 8, "name": "James", "surname": "Anderson", "age": 29, "position": "Junior", "salary": 3300, "projectAssignments": [{ "projectId": 3, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [13, 14, 15] },
+        { "id": 9, "name": "Maria", "surname": "Garcia", "age": 36, "position": "Middle", "salary": 4900, "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [6, 7, 8] }
+      ]
+    },
+    "2026-2": {
+      "period": "March 2026",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App Pro", "budget": 74000, "employeeCapacity": 4, "estimatedIncome": 177600 },
+        { "id": 2, "companyName": "WebSolutions", "projectName": "E-commerce Plus", "budget": 84000, "employeeCapacity": 4, "estimatedIncome": 201600 },
+        { "id": 3, "companyName": "DataSoft", "projectName": "Analytics Pro", "budget": 64000, "employeeCapacity": 3, "estimatedIncome": 153600 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 35, "position": "Senior", "salary": 5700, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [9, 10, 11] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 33, "position": "Middle", "salary": 4200, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [7, 8, 9] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 37, "position": "Lead", "salary": 7700, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [19, 20, 21] },
+        { "id": 4, "name": "Alex", "surname": "Brown", "age": 34, "position": "Architect", "salary": 8700, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [5, 6, 7] },
+        { "id": 5, "name": "Emily", "surname": "Davis", "age": 32, "position": "Middle", "salary": 4400, "projectAssignments": [{ "projectId": 2, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [12, 13, 14] },
+        { "id": 6, "name": "Sarah", "surname": "Williams", "age": 30, "position": "Junior", "salary": 3200, "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [26, 27, 28] },
+        { "id": 7, "name": "David", "surname": "Wilson", "age": 40, "position": "Lead", "salary": 8000, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [18, 19, 20] },
+        { "id": 8, "name": "James", "surname": "Anderson", "age": 29, "position": "Junior", "salary": 3400, "projectAssignments": [{ "projectId": 3, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [15, 16, 17] },
+        { "id": 9, "name": "Maria", "surname": "Garcia", "age": 36, "position": "Middle", "salary": 5000, "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [8, 9, 10] }
+      ]
+    },
+    "2026-3": {
+      "period": "April 2026",
+      "projects": [
+        { "id": 1, "companyName": "TechCorp", "projectName": "Mobile App Pro", "budget": 76000, "employeeCapacity": 4, "estimatedIncome": 182400 },
+        { "id": 2, "companyName": "WebSolutions", "projectName": "E-commerce Plus", "budget": 86000, "employeeCapacity": 4, "estimatedIncome": 206400 },
+        { "id": 3, "companyName": "DataSoft", "projectName": "Analytics Pro", "budget": 66000, "employeeCapacity": 3, "estimatedIncome": 158400 }
+      ],
+      "employees": [
+        { "id": 1, "name": "John", "surname": "Smith", "age": 35, "position": "Senior", "salary": 5800, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [11, 12, 13] },
+        { "id": 2, "name": "Jane", "surname": "Doe", "age": 33, "position": "Middle", "salary": 4300, "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }], "vacationDays": [9, 10, 11] },
+        { "id": 3, "name": "Mike", "surname": "Johnson", "age": 37, "position": "Lead", "salary": 7800, "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [21, 22, 23] },
+        { "id": 4, "name": "Alex", "surname": "Brown", "age": 34, "position": "Architect", "salary": 8800, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [7, 8, 9] },
+        { "id": 5, "name": "Emily", "surname": "Davis", "age": 32, "position": "Middle", "salary": 4500, "projectAssignments": [{ "projectId": 2, "capacity": 0.7, "fit": 0.95 }], "vacationDays": [14, 15, 16] },
+        { "id": 6, "name": "Sarah", "surname": "Williams", "age": 30, "position": "Junior", "salary": 3300, "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }], "vacationDays": [28, 29, 30] },
+        { "id": 7, "name": "David", "surname": "Wilson", "age": 40, "position": "Lead", "salary": 8100, "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }], "vacationDays": [20, 21, 22] },
+        { "id": 8, "name": "James", "surname": "Anderson", "age": 29, "position": "Junior", "salary": 3500, "projectAssignments": [{ "projectId": 3, "capacity": 0.5, "fit": 0.8 }], "vacationDays": [17, 18, 19] },
+        { "id": 9, "name": "Maria", "surname": "Garcia", "age": 36, "position": "Middle", "salary": 5100, "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.9 }], "vacationDays": [10, 11, 12] }
+      ]
+    },
+    "2026-4": {
+      "period": "May 2026",
+      "projects": [
+        {
+          "id": 1,
+          "companyName": "TechCorp",
+          "projectName": "Mobile App Pro",
+          "budget": 78000,
+          "employeeCapacity": 7,
+          "estimatedIncome": 187200
+        },
+        {
+          "id": 2,
+          "companyName": "WebSolutions",
+          "projectName": "E-commerce Plus",
+          "budget": 88000,
+          "employeeCapacity": 10,
+          "estimatedIncome": 211200
+        },
+        {
+          "id": 3,
+          "companyName": "DataSoft",
+          "projectName": "Analytics Pro",
+          "budget": 68000,
+          "employeeCapacity": 5,
+          "estimatedIncome": 163200
+        }
+      ],
+      "employees": [
+        {
+          "id": 1,
+          "name": "John",
+          "surname": "Smith",
+          "age": 35,
+          "position": "Senior",
+          "salary": 5900,
+          "estimatedPayment": 5900,
+          "projectAssignments": [{ "projectId": 1, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [4, 5, 6]
+        },
+        {
+          "id": 2,
+          "name": "Jane",
+          "surname": "Doe",
+          "age": 33,
+          "position": "Middle",
+          "salary": 4400,
+          "estimatedPayment": 4400,
+          "projectAssignments": [{ "projectId": 1, "capacity": 0.8, "fit": 0.9 }],
+          "vacationDays": [2, 3, 4]
+        },
+        {
+          "id": 3,
+          "name": "Mike",
+          "surname": "Johnson",
+          "age": 37,
+          "position": "Lead",
+          "salary": 7900,
+          "estimatedPayment": 7900,
+          "projectAssignments": [{ "projectId": 2, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [12, 13, 14]
+        },
+        {
+          "id": 4,
+          "name": "Sarah",
+          "surname": "Williams",
+          "age": 30,
+          "position": "Junior",
+          "salary": 3400,
+          "estimatedPayment": 3400,
+          "projectAssignments": [{ "projectId": 2, "capacity": 0.6, "fit": 0.85 }],
+          "vacationDays": [19, 20, 21]
+        },
+        {
+          "id": 5,
+          "name": "Alex",
+          "surname": "Brown",
+          "age": 34,
+          "position": "Architect",
+          "salary": 8900,
+          "estimatedPayment": 8900,
+          "projectAssignments": [{ "projectId": 3, "capacity": 1.0, "fit": 1.0 }],
+          "vacationDays": [8, 9, 10]
+        },
+        {
+          "id": 6,
+          "name": "Emily",
+          "surname": "Davis",
+          "age": 32,
+          "position": "Middle",
+          "salary": 4600,
+          "estimatedPayment": 4600,
+          "projectAssignments": [{ "projectId": 3, "capacity": 0.7, "fit": 0.95 }],
+          "vacationDays": [15, 16, 17]
+        }
+      ]
+    }
+  }
+}
